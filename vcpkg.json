@@ -1,0 +1,9 @@
+{
+  "name": "cpp_webview2",
+  "version": "0.1.0",
+  "dependencies": [
+    "cpr",
+    "nlohmann-json",
+    "unofficial-webview2"
+  ]
+}
