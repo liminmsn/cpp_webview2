@@ -21,6 +21,6 @@ add_executable(cpp_webview2
 )
 
 set_target_properties(cpp_webview2 PROPERTIES
-    OUTPUT_NAME "Cpp"
+    OUTPUT_NAME "好看韩剧5"
 )
 

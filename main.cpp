@@ -1,8 +1,11 @@
 #define UNICODE
 #define _UNICODE
 #include <windows.h>
+#include <iostream>
 #include "resource.h"
+#include "src/head/AppLication.h"
 
+static std::unique_ptr<AppLication> app;
 // 窗口过程函数
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -28,14 +31,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON));
 
-
     RegisterClass(&wc);
 
     // 创建窗口（宽字符版本）
     HWND hwnd = CreateWindowEx(
         0,                            // 扩展样式
         CLASS_NAME,                   // 类名
-        L"我的第一个窗口",             // 窗口标题（宽字符）
+        L"好看韩剧5",                 // 窗口标题（宽字符）
         WS_OVERLAPPEDWINDOW,          // 样式
         CW_USEDEFAULT, CW_USEDEFAULT, // 初始位置
         800, 600,                     // 宽高
@@ -43,8 +45,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 
     if (hwnd == nullptr)
         return 0;
-    ShowWindow(hwnd, nCmdShow);
-    UpdateWindow(hwnd);
+
+    AppLication::Context ctx;
+    ctx.wc = wc;
+    ctx.hwnd = hwnd;
+    app = std::make_unique<AppLication>(ctx);
 
     // 消息循环
     MSG msg = {};
