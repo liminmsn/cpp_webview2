@@ -56,6 +56,13 @@ Application::~Application()
     UnregisterClassW(m_className, m_hInst);
 }
 
+constexpr int DESIGN_WIDTH = 1280;
+constexpr int DESIGN_HEIGHT = 720;
+inline int ScaleByDpi(int value, UINT dpi)
+{
+    return MulDiv(value, dpi, 96);
+}
+
 Application::Application(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc), m_hInst(hInst)
 {
     m_wc.lpszClassName = m_className;
@@ -66,6 +73,9 @@ Application::Application(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
         MessageBoxW(nullptr, L"注册窗口类失败", L"错误", MB_ICONERROR);
         return;
     }
+    UINT dpi = GetDpiForSystem();
+    int width = ScaleByDpi(DESIGN_WIDTH, dpi);
+    int height = ScaleByDpi(DESIGN_HEIGHT, dpi);
 
     m_hwnd = CreateWindowExW(
         0,
@@ -73,7 +83,7 @@ Application::Application(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
         L"我的第一个窗口",
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        800, 600,
+        width, height,
         nullptr, nullptr,
         m_hInst,
         this);
