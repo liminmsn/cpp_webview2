@@ -46,11 +46,3 @@ target_link_libraries(cpp_webview2 PRIVATE
     dcomp
     dwmapi
 )
-
-# # Windows 常用宏
-# target_compile_definitions(cpp_webview2 PRIVATE
-#     UNICODE
-#     _UNICODE
-#     WIN32_LEAN_AND_MEAN
-#     NOMINMAX
-# )

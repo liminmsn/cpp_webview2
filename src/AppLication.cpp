@@ -6,21 +6,22 @@
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "UxTheme.lib")
 
-auto EnableDarkModeWindow = [](HWND hwnd) {
+auto EnableDarkModeWindow = [](HWND hwnd)
+{
     BOOL useDark = TRUE;
     // 两个常见的 DWMWA 值，某些 Windows 版本使用 20，有些使用 19
     const DWORD DWMWA_USE_IMMERSIVE_DARK_MODE_20 = 20;
     const DWORD DWMWA_USE_IMMERSIVE_DARK_MODE_19 = 19;
 
     HRESULT hr = DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_20, &useDark, sizeof(useDark));
-    if (FAILED(hr)) {
+    if (FAILED(hr))
+    {
         DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_19, &useDark, sizeof(useDark));
     }
 
     // 让常见控件使用暗色主题
     SetWindowTheme(hwnd, L"DarkMode_Explorer", nullptr);
 };
-
 
 int Application::RunMessageLoop()
 {
@@ -114,17 +115,10 @@ Application::Application(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
         return;
     }
 
-    // 自定义窗口样式
-    MARGINS margins;
-    margins.cxLeftWidth = -1;
-    margins.cxRightWidth = -1;
-    margins.cyTopHeight = -1;
-    margins.cyBottomHeight = -1;
-    DwmExtendFrameIntoClientArea(m_hwnd, &margins);
     DWM_SYSTEMBACKDROP_TYPE type = DWMSBT_TRANSIENTWINDOW;
     DwmSetWindowAttribute(m_hwnd, DWMWA_SYSTEMBACKDROP_TYPE, &type, sizeof(type));
     EnableDarkModeWindow(m_hwnd);
-
+    
     ShowWindow(m_hwnd, nCmdShow);
     UpdateWindow(m_hwnd);
     hkwebview = std::make_unique<HKWebview>(*this);
