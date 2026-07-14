@@ -12,13 +12,13 @@ class HKWebview
 {
 public:
     explicit HKWebview(Application &app);
-    void HKWebview::InitSettings();
-    void HKWebview::InitEvents();
     void HKWebview::Resize();
-
-private:
     ComPtr<ICoreWebView2Environment> environment;
     ComPtr<ICoreWebView2Controller> controller;
     ComPtr<ICoreWebView2> webview;
+
+private:
+    void HKWebview::InitSettings();
+    void HKWebview::InitEvents();
     Application &m_app;
 };

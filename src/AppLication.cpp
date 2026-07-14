@@ -37,8 +37,8 @@ LRESULT CALLBACK Application::StaticWndProc(HWND hwnd, UINT msg, WPARAM wParam, 
             PostQuitMessage(0);
             return 0;
         case WM_SIZE:
-            if (pThis && pThis->webview)
-                pThis->webview->Resize();
+            if (pThis && pThis->hkwebview)
+                pThis->hkwebview->Resize();
             break;
         default:
             break;
@@ -96,5 +96,6 @@ Application::Application(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 
     ShowWindow(m_hwnd, nCmdShow);
     UpdateWindow(m_hwnd);
-    webview = std::make_unique<HKWebview>(*this);
+    hkwebview = std::make_unique<HKWebview>(*this);
+    bridge = std::make_unique<Bridge>(*this);
 }

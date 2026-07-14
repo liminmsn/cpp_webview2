@@ -40,7 +40,7 @@ HKWebview::HKWebview(Application &app) : m_app(app)
                             controller->put_Bounds(rc);
                             controller->put_IsVisible(TRUE);
                             controller->put_ZoomFactor(1.0);
-                            
+
                             InitSettings();
                             InitEvents();
 
