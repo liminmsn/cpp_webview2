@@ -2,7 +2,7 @@
 #define _UNICODE
 #include "head/Application.h"
 
-Application::Application(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc), m_hInst(hInst), m_nCmdShow(nCmdShow)
+Application::Application(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc), m_hInst(hInst)
 {
     m_wc.lpszClassName = m_className;
     m_wc.lpfnWndProc = Application::StaticWndProc;
@@ -30,15 +30,9 @@ Application::Application(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
         return;
     }
 
-    ShowWindow(m_hwnd, m_nCmdShow);
+    ShowWindow(m_hwnd, nCmdShow);
     UpdateWindow(m_hwnd);
-}
-
-Application::~Application()
-{
-    if (m_hwnd)
-        DestroyWindow(m_hwnd);
-    UnregisterClassW(m_className, m_hInst);
+    webview = std::make_unique<HKWebview>(*this);
 }
 
 int Application::RunMessageLoop()
@@ -75,6 +69,10 @@ LRESULT CALLBACK Application::StaticWndProc(HWND hwnd, UINT msg, WPARAM wParam, 
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
+        case WM_SIZE:
+            if (pThis && pThis->webview)
+                pThis->webview->Resize();
+            break;
         default:
             break;
         }
@@ -82,4 +80,11 @@ LRESULT CALLBACK Application::StaticWndProc(HWND hwnd, UINT msg, WPARAM wParam, 
     };
 
     return MsgHandler(hwnd, msg, wParam, lParam);
+}
+
+Application::~Application()
+{
+    if (m_hwnd)
+        DestroyWindow(m_hwnd);
+    UnregisterClassW(m_className, m_hInst);
 }
