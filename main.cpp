@@ -1,12 +1,24 @@
 #define UNICODE
 #define _UNICODE
+#include <objbase.h>
 #include "src/head/Application.h"
 #include "resource.h"
+
+#include <shellscalingapi.h>
+#pragma comment(lib, "Shcore.lib")
 
 static std::unique_ptr<Application> app;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
+    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
+    {
+        MessageBoxW(nullptr, L"COM 初始化失败", L"错误", MB_ICONERROR);
+        return 1;
+    }
+
     WNDCLASSW wc = {};
     wc.hInstance = hInstance;
     wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
@@ -16,5 +28,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
     int exitCode = app->RunMessageLoop();
 
     app.reset();
+    CoUninitialize();
     return exitCode;
 }

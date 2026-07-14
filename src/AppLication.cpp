@@ -2,45 +2,6 @@
 #define _UNICODE
 #include "head/Application.h"
 
-Application::Application(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc), m_hInst(hInst), m_nCmdShow(nCmdShow)
-{
-    m_wc.lpszClassName = m_className;
-    m_wc.lpfnWndProc = Application::StaticWndProc;
-
-    if (!RegisterClassW(&m_wc))
-    {
-        MessageBoxW(nullptr, L"注册窗口类失败", L"错误", MB_ICONERROR);
-        return;
-    }
-
-    m_hwnd = CreateWindowExW(
-        0,
-        m_className,
-        L"我的第一个窗口",
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT,
-        800, 600,
-        nullptr, nullptr,
-        m_hInst,
-        this);
-
-    if (!m_hwnd)
-    {
-        MessageBoxW(nullptr, L"创建窗口失败", L"错误", MB_ICONERROR);
-        return;
-    }
-
-    ShowWindow(m_hwnd, m_nCmdShow);
-    UpdateWindow(m_hwnd);
-}
-
-Application::~Application()
-{
-    if (m_hwnd)
-        DestroyWindow(m_hwnd);
-    UnregisterClassW(m_className, m_hInst);
-}
-
 int Application::RunMessageLoop()
 {
     MSG msg{};
@@ -75,6 +36,10 @@ LRESULT CALLBACK Application::StaticWndProc(HWND hwnd, UINT msg, WPARAM wParam, 
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
+        case WM_SIZE:
+            if (pThis && pThis->webview)
+                pThis->webview->Resize();
+            break;
         default:
             break;
         }
@@ -82,4 +47,54 @@ LRESULT CALLBACK Application::StaticWndProc(HWND hwnd, UINT msg, WPARAM wParam, 
     };
 
     return MsgHandler(hwnd, msg, wParam, lParam);
+}
+
+Application::~Application()
+{
+    if (m_hwnd)
+        DestroyWindow(m_hwnd);
+    UnregisterClassW(m_className, m_hInst);
+}
+
+constexpr int DESIGN_WIDTH = 1280;
+constexpr int DESIGN_HEIGHT = 720;
+inline int ScaleByDpi(int value, UINT dpi)
+{
+    return MulDiv(value, dpi, 96);
+}
+
+Application::Application(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc), m_hInst(hInst)
+{
+    m_wc.lpszClassName = m_className;
+    m_wc.lpfnWndProc = Application::StaticWndProc;
+
+    if (!RegisterClassW(&m_wc))
+    {
+        MessageBoxW(nullptr, L"注册窗口类失败", L"错误", MB_ICONERROR);
+        return;
+    }
+    UINT dpi = GetDpiForSystem();
+    int width = ScaleByDpi(DESIGN_WIDTH, dpi);
+    int height = ScaleByDpi(DESIGN_HEIGHT, dpi);
+
+    m_hwnd = CreateWindowExW(
+        0,
+        m_className,
+        L"我的第一个窗口",
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        width, height,
+        nullptr, nullptr,
+        m_hInst,
+        this);
+
+    if (!m_hwnd)
+    {
+        MessageBoxW(nullptr, L"创建窗口失败", L"错误", MB_ICONERROR);
+        return;
+    }
+
+    ShowWindow(m_hwnd, nCmdShow);
+    UpdateWindow(m_hwnd);
+    webview = std::make_unique<HKWebview>(*this);
 }
