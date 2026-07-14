@@ -3,6 +3,7 @@
 
 HKWebview::HKWebview(Application &app) : m_app(app)
 {
+
     CreateCoreWebView2EnvironmentWithOptions(
         nullptr,
         nullptr,
@@ -12,13 +13,13 @@ HKWebview::HKWebview(Application &app) : m_app(app)
             {
                 if (FAILED(result))
                 {
-                    OutputDebugStringW(L"CreateCoreWebView2EnvironmentWithOptions failed\n");
+                    OutputDebugStringW(L"CreateCoreWebView2Environment failed\n");
                     return result;
                 }
 
                 environment = env;
 
-                return env->CreateCoreWebView2Controller(
+                return environment->CreateCoreWebView2Controller(
                     m_app.m_hwnd,
                     Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
                         [this](HRESULT result, ICoreWebView2Controller *controllerPtr) -> HRESULT
@@ -28,12 +29,24 @@ HKWebview::HKWebview(Application &app) : m_app(app)
                                 OutputDebugStringW(L"CreateCoreWebView2Controller failed\n");
                                 return result;
                             }
-
                             controller = controllerPtr;
                             if (!controller)
                                 return E_POINTER;
 
+                            /*
+                                设置WebView2透明背景
+                            */
+                            ComPtr<ICoreWebView2Controller2> controller2;
+                            if (SUCCEEDED(controller.As(&controller2)))
+                            {
+                                COREWEBVIEW2_COLOR color{0, 0, 0, 0};
+                                controller2->put_DefaultBackgroundColor(color);
+                            }
+
                             controller->get_CoreWebView2(&webview);
+
+                            if (!webview)
+                                return E_POINTER;
 
                             RECT rc{};
                             GetClientRect(m_app.m_hwnd, &rc);
@@ -44,11 +57,13 @@ HKWebview::HKWebview(Application &app) : m_app(app)
                             InitSettings();
                             InitEvents();
 
-                            if (webview)
-                                webview->Navigate(L"https://www.baidu.com");
+                            webview->Navigate(L" http://127.0.0.1:5173");
 
-                            m_app.bridge->Init();
-                            
+                            if (m_app.bridge)
+                            {
+                                m_app.bridge->Init();
+                            }
+
                             return S_OK;
                         })
                         .Get());
@@ -58,30 +73,35 @@ HKWebview::HKWebview(Application &app) : m_app(app)
 
 void HKWebview::InitSettings()
 {
-    ComPtr<ICoreWebView2Settings> settings;
 
+    if (!webview)
+        return;
+
+    ComPtr<ICoreWebView2Settings> settings;
     webview->get_Settings(&settings);
 
+    if (!settings)
+        return;
     settings->put_IsScriptEnabled(TRUE);
-
     settings->put_IsWebMessageEnabled(TRUE);
-
     settings->put_AreDevToolsEnabled(TRUE);
-
     settings->put_AreDefaultContextMenusEnabled(FALSE);
-
     settings->put_IsZoomControlEnabled(FALSE);
 }
 
 void HKWebview::InitEvents()
 {
+
+    if (!webview)
+        return;
+
     webview->add_NavigationCompleted(
         Callback<ICoreWebView2NavigationCompletedEventHandler>(
-            [](ICoreWebView2 *,
-               ICoreWebView2NavigationCompletedEventArgs *)
-                -> HRESULT
+            [](ICoreWebView2 *, ICoreWebView2NavigationCompletedEventArgs *) -> HRESULT
             {
-                OutputDebugStringW(L"页面加载完成\n");
+                OutputDebugStringW(
+                    L"WebView2 页面加载完成\n");
+
                 return S_OK;
             })
             .Get(),
@@ -90,11 +110,10 @@ void HKWebview::InitEvents()
 
 void HKWebview::Resize()
 {
+
     if (!controller)
         return;
-
-    RECT rc;
+    RECT rc{};
     GetClientRect(m_app.m_hwnd, &rc);
-
     controller->put_Bounds(rc);
 }

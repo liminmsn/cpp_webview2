@@ -17,6 +17,7 @@ set(CMAKE_WIN32_EXECUTABLE TRUE)
 add_compile_options("/utf-8")
 
 find_package(unofficial-webview2 CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 
 
@@ -41,6 +42,9 @@ set_target_properties(cpp_webview2 PROPERTIES
 
 target_link_libraries(cpp_webview2 PRIVATE
     unofficial::webview2::webview2
+    nlohmann_json::nlohmann_json
+    dcomp
+    dwmapi
 )
 
 # # Windows 常用宏

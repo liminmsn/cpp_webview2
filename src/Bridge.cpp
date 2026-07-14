@@ -23,20 +23,20 @@ void Bridge::Init()
 
 void Bridge::OnWebMessage(ICoreWebView2 *sender, ICoreWebView2WebMessageReceivedEventArgs *args)
 {
-    LPWSTR message = nullptr;
-    args->get_WebMessageAsJson(&message);
+    // LPWSTR message = nullptr;
+    // args->get_WebMessageAsJson(&message);
 
-    std::wstring ws(message);
-    CoTaskMemFree(message);
+    // std::wstring ws(message);
+    // CoTaskMemFree(message);
 
-    std::string json = Utf16ToUtf8(ws);
-    auto obj = StringToJson(json);
-    std::string event = obj["event"];
+    // std::string json = Utf16ToUtf8(ws);
+    // auto obj = StringToJson(json);
+    // std::string event = obj["event"];
 
-    if (event == "login")
-    {
-        // Login(obj["data"]);
-    }
+    // if (event == "login")
+    // {
+    //     // Login(obj["data"]);
+    // }
 }
 
 void Bridge::Send(const std::string &json)
