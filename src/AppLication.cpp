@@ -2,39 +2,6 @@
 #define _UNICODE
 #include "head/Application.h"
 
-Application::Application(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc), m_hInst(hInst)
-{
-    m_wc.lpszClassName = m_className;
-    m_wc.lpfnWndProc = Application::StaticWndProc;
-
-    if (!RegisterClassW(&m_wc))
-    {
-        MessageBoxW(nullptr, L"注册窗口类失败", L"错误", MB_ICONERROR);
-        return;
-    }
-
-    m_hwnd = CreateWindowExW(
-        0,
-        m_className,
-        L"我的第一个窗口",
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT,
-        800, 600,
-        nullptr, nullptr,
-        m_hInst,
-        this);
-
-    if (!m_hwnd)
-    {
-        MessageBoxW(nullptr, L"创建窗口失败", L"错误", MB_ICONERROR);
-        return;
-    }
-
-    ShowWindow(m_hwnd, nCmdShow);
-    UpdateWindow(m_hwnd);
-    webview = std::make_unique<HKWebview>(*this);
-}
-
 int Application::RunMessageLoop()
 {
     MSG msg{};
@@ -87,4 +54,37 @@ Application::~Application()
     if (m_hwnd)
         DestroyWindow(m_hwnd);
     UnregisterClassW(m_className, m_hInst);
+}
+
+Application::Application(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc), m_hInst(hInst)
+{
+    m_wc.lpszClassName = m_className;
+    m_wc.lpfnWndProc = Application::StaticWndProc;
+
+    if (!RegisterClassW(&m_wc))
+    {
+        MessageBoxW(nullptr, L"注册窗口类失败", L"错误", MB_ICONERROR);
+        return;
+    }
+
+    m_hwnd = CreateWindowExW(
+        0,
+        m_className,
+        L"我的第一个窗口",
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        800, 600,
+        nullptr, nullptr,
+        m_hInst,
+        this);
+
+    if (!m_hwnd)
+    {
+        MessageBoxW(nullptr, L"创建窗口失败", L"错误", MB_ICONERROR);
+        return;
+    }
+
+    ShowWindow(m_hwnd, nCmdShow);
+    UpdateWindow(m_hwnd);
+    webview = std::make_unique<HKWebview>(*this);
 }
