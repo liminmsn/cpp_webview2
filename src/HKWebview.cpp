@@ -47,6 +47,8 @@ HKWebview::HKWebview(Application &app) : m_app(app)
                             if (webview)
                                 webview->Navigate(L"https://www.baidu.com");
 
+                            m_app.bridge->Init();
+                            
                             return S_OK;
                         })
                         .Get());

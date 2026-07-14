@@ -7,8 +7,10 @@
 class Application
 {
 public:
-    static LRESULT CALLBACK StaticWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
     explicit Application(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow);
+    ~Application();
+    int RunMessageLoop();
+    static LRESULT CALLBACK StaticWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
     WNDCLASSW m_wc;
     HINSTANCE m_hInst;
     HWND m_hwnd = nullptr;
@@ -17,6 +19,4 @@ public:
 
 private:
     const wchar_t m_className[16] = L"HKWebView";
-    int RunMessageLoop();
-    ~Application();
 };

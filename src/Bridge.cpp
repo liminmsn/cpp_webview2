@@ -1,11 +1,15 @@
 #include "head/Bridge.h"
 #include "head/AppLication.h"
 #include "utils/Encoding.h"
-#include <nlohmann/json.hpp>
+#include "utils/JsonUtil.h"
 
-Bridge::Bridge(Application &app) : m_app(app)
+Bridge::Bridge(Application &app) : m_app(app) {}
+
+void Bridge::Init()
 {
-    m_app.hkwebview->webview->add_WebMessageReceived(
+    auto webview = m_app.hkwebview->webview;
+
+    webview->add_WebMessageReceived(
         Callback<ICoreWebView2WebMessageReceivedEventHandler>(
             [this](ICoreWebView2 *sender,
                    ICoreWebView2WebMessageReceivedEventArgs *args)
@@ -17,21 +21,16 @@ Bridge::Bridge(Application &app) : m_app(app)
         nullptr);
 }
 
-void Bridge::OnWebMessage(
-    ICoreWebView2 *sender,
-    ICoreWebView2WebMessageReceivedEventArgs *args)
+void Bridge::OnWebMessage(ICoreWebView2 *sender, ICoreWebView2WebMessageReceivedEventArgs *args)
 {
     LPWSTR message = nullptr;
-
     args->get_WebMessageAsJson(&message);
 
     std::wstring ws(message);
     CoTaskMemFree(message);
 
     std::string json = Utf16ToUtf8(ws);
-
-    auto obj = nlohmann::json::parse(json);
-
+    auto obj = StringToJson(json);
     std::string event = obj["event"];
 
     if (event == "login")
