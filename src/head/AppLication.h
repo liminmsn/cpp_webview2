@@ -3,6 +3,7 @@
 #include <memory>
 #include "HKWebview.h"
 #include "Bridge.h"
+#include "Window.h"
 
 class Application
 {
@@ -16,6 +17,7 @@ public:
     HWND m_hwnd = nullptr;
     std::unique_ptr<HKWebview> hkwebview;
     std::unique_ptr<Bridge> bridge;
+    std::unique_ptr<Window> window;
 
 private:
     const wchar_t m_className[16] = L"HKWebView";
