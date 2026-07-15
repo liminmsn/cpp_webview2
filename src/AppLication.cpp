@@ -40,6 +40,21 @@ LRESULT CALLBACK Application::StaticWndProc(HWND hwnd, UINT msg, WPARAM wParam, 
 				if (pThis && pThis->hkwebview)
 					pThis->hkwebview->Resize();
 				break;
+			case WM_APP + 1:
+			{
+				std::wstring* pw = reinterpret_cast<std::wstring*>(l);
+				if (pw)
+				{
+					if (pThis && pThis->hkwebview)
+					{
+						// Forward JSON string to WebView2 on UI thread
+						pThis->hkwebview->webview->PostWebMessageAsJson(pw->c_str());
+					}
+					// Always free the memory to avoid leaks even if window was destroyed
+					delete pw;
+				}
+				return 0;
+			}
 			default:
 				break;
 			}

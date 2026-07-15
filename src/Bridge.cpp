@@ -49,39 +49,48 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 				headers[k] = v.get<std::string>();
 			}
 		}
-		NetContext context{
-				url,
-				method,
-				headers ,
-				[this,id](cpr::Response r) {
-					nlohmann::json res;
+	if (url.empty() || (url.rfind("http://", 0) != 0 && url.rfind("https://", 0) != 0)) {
+		nlohmann::json res;
+		res["id"] = id;
+		res["data"] = { {"status", -1}, {"error", "invalid url"} };
+		Send(res);
+	} else {
+		std::thread([this, url, method, headers, id]() {
+			try {
+				NetContext context{
+					url,
+					method,
+					headers,
+					[this,id](cpr::Response r) {
+						nlohmann::json res;
 						res["id"] = id;
-						res["data"] = {
-							{"status", r.status_code},
-							{"body", r.text}
-						};
+						// cpr 返回可能包含错误信息在 r.error.message
+						if (r.status_code == 0 || !r.error.message.empty()) {
+							std::string msg = r.error.message.empty() ? "request failed" : r.error.message;
+							res["data"] = { {"status", 0}, {"error", msg} };
+						} else {
+							res["data"] = {
+								{"status", r.status_code},
+								{"body", r.text}
+							};
+						}
 						Send(res);
-				}
-		};
-		Net::Net(context);
-		//std::thread([this, id, url, method, headers]() {
-		//	NetContext context{
-		//		url,
-		//		method,
-		//		headers ,
-		//		[this,id](cpr::Response r) {
-		//			nlohmann::json res;
-		//				res["id"] = id;
-		//				res["data"] = {
-		//					{"status", r.status_code},
-		//					{"body", r.text}
-		//				};
-		//				Send(res.dump());
-		//		}
-		//	};
-		//	Net::Net(context);
-		//	}).detach();
-
+					}
+				};
+				Net::Net(context);
+			} catch (const std::exception& e) {
+				nlohmann::json res;
+				res["id"] = id;
+				res["data"] = { {"status", -1}, {"error", e.what()} };
+				Send(res);
+			} catch (...) {
+				nlohmann::json res;
+				res["id"] = id;
+				res["data"] = { {"status", -1}, {"error", "unknown exception"} };
+				Send(res);
+			}
+		}).detach();
+	}
 	}
 	// ========================
 	// 窗口方法
@@ -110,9 +119,23 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 	}
 }
 
-void Bridge::Send(const json &json)
+void Bridge::Send(const json& json)
 {
-	std::wstring w = Utf8ToUtf16(json.dump());
-
-	m_app.hkwebview->webview->PostWebMessageAsJson(w.c_str());
+	// Post the JSON to the UI thread to ensure WebView2 COM calls happen on the
+	// UI thread. Allocate the string on the heap and send via PostMessage; the
+	// Application message handler will forward it to WebView2 and free it.
+	std::wstring* w = new std::wstring(Utf8ToUtf16(json.dump()));
+	if (m_app.m_hwnd)
+	{
+		PostMessageW(m_app.m_hwnd, WM_APP + 1, 0, reinterpret_cast<LPARAM>(w));
+	}
+	else
+	{
+		// Fallback: if no window, attempt direct call (best-effort) and free
+		if (m_app.hkwebview)
+		{
+			m_app.hkwebview->webview->PostWebMessageAsJson(w->c_str());
+		}
+		delete w;
+	}
 }
