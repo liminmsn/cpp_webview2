@@ -120,7 +120,7 @@ Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 
 	ShowWindow(m_hwnd, nCmdShow);
 	UpdateWindow(m_hwnd);
-	EnableDarkModeWindow(m_hwnd, TRUE);
+	//EnableDarkModeWindow(m_hwnd, TRUE);
 	hkwebview = std::make_unique<HKWebview>(*this);
 	bridge = std::make_unique<Bridge>(*this);
 	window = std::make_unique<Window>(m_hwnd);

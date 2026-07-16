@@ -106,8 +106,12 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 			res["data"] = {
 				{"state", m_app.window->IsFullscreen()}
 			};
-
 			Send(res);
+		}
+		else if (action == "Reset") {
+			if (m_app.window->IsFullscreen()) {
+				m_app.window->ToggleFullscreen();
+			}
 		}
 	}
 	else
