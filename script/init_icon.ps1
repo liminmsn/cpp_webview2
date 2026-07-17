@@ -13,10 +13,10 @@ if (!(Test-Path $OutputDir)) {
 magick `
     $Input `
     -trim +repage `
-    -resize 150% `
-    -background none `
+    -resize 256x256 `
     -gravity center `
-    -extent "%[fx:max(w,h)]x%[fx:max(w,h)]" `
+    -background none `
+    -extent 256x256 `
     -define icon:auto-resize=256,128,64,48,40,32,24,20,16 `
     $Output
 
