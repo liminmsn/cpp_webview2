@@ -37,7 +37,7 @@ add_executable(cpp_webview2
 
 # 输出名称
 set_target_properties(cpp_webview2 PROPERTIES
-    OUTPUT_NAME "Webview2窗口程序"
+    OUTPUT_NAME "好看韩剧5"
 )
 
 # 链接库
