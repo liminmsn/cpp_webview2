@@ -20,6 +20,7 @@ add_compile_options("/utf-8")
 find_package(unofficial-webview2 CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(cpr CONFIG REQUIRED)
+find_package(miniz CONFIG REQUIRED)
 
 # 自动收集源码
 file(GLOB_RECURSE SRC_FILES
@@ -37,16 +38,17 @@ add_executable(cpp_webview2
 
 # 输出名称
 set_target_properties(cpp_webview2 PROPERTIES
-    OUTPUT_NAME "Webview2窗口程序"
+    OUTPUT_NAME "本地Mysql"
 )
 
 # 链接库
 target_link_libraries(cpp_webview2 PRIVATE
     unofficial::webview2::webview2
     nlohmann_json::nlohmann_json
-    cpr::cpr              # ✅ 注意这里要写 cpr::cpr，而不是 cpr
-    dcomp                 # DirectComposition
-    dwmapi                # DWM API
+    miniz::miniz
+    cpr::cpr
+    dcomp             
+    dwmapi
 )
 
 # Windows SDK 依赖（可选，确保链接到系统库）
@@ -54,5 +56,13 @@ target_link_libraries(cpp_webview2 PRIVATE
     user32
     gdi32
     ole32
+    oleaut32
     shell32
+)
+
+
+add_custom_command(TARGET cpp_webview2 POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/resources"
+        "$<TARGET_FILE_DIR:cpp_webview2>/resources"
 )

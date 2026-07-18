@@ -100,7 +100,7 @@ Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 	m_hwnd = CreateWindowExW(
 		WS_EX_NOREDIRECTIONBITMAP,
 		m_className,
-		L"Webview2窗口程序",
+		L"本地Mysql",
 		style,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
@@ -121,7 +121,14 @@ Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 	ShowWindow(m_hwnd, nCmdShow);
 	UpdateWindow(m_hwnd);
 	//EnableDarkModeWindow(m_hwnd, TRUE);
+	window = std::make_unique<Window>(m_hwnd);
+	taskbar = std::make_unique<Taskbar>(m_hwnd);
 	hkwebview = std::make_unique<HKWebview>(*this);
 	bridge = std::make_unique<Bridge>(*this);
-	window = std::make_unique<Window>(m_hwnd);
+	mysqlManager = std::make_unique<MysqlManager>(*this);
+	if (mysqlManager->Init()) {
+		if (!mysqlManager->IsInstalled()) {
+			mysqlManager->Install();
+		}
+	}
 }
