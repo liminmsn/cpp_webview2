@@ -71,8 +71,8 @@ Application::~Application()
 	UnregisterClassW(m_className, m_hInst);
 }
 
-constexpr int DESIGN_WIDTH = 1200;
-constexpr int DESIGN_HEIGHT = 800;
+constexpr int DESIGN_WIDTH = 900;
+constexpr int DESIGN_HEIGHT = 700;
 inline int ScaleByDpi(int value, UINT dpi)
 {
 	return MulDiv(value, dpi, 96);
