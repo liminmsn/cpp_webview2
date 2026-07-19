@@ -114,24 +114,41 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 			}
 		}
 	}
+	// ========================
+	// 窗口方法mysql管理
+	// ========================
 	else if (type == "mysql") {
 		auto action = obj["data"].value("type", "");
+
+		nlohmann::json res;
+		res["id"] = id;
 		if (action == "InstallService") {
-			m_app.mysqlManager->InstallService();
+			res["data"] = m_app.mysqlManager->InstallService();
 		}
 		else if (action == "IsInstallService")
 		{
-			nlohmann::json res;
-			res["id"] = id;
 			res["data"] = m_app.mysqlManager->IsInstallService();
-			Send(res);
+
 		}
+		else if (action == "RemoveService")
+		{
+			res["data"] = !m_app.mysqlManager->RemoveService();
+		}
+		else if (action == "Start")
+		{
+			res["data"] = m_app.mysqlManager->Start();
+		}
+		else if (action == "Stop")
+		{
+			res["data"] = !m_app.mysqlManager->Stop();
+		}
+		Send(res);
 	}
+	// ========================
+	// 默认返回
+	// ========================
 	else
 	{
-		// ========================
-		// 默认返回
-		// ========================
 		Send(j);
 	}
 }

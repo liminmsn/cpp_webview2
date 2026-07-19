@@ -117,10 +117,8 @@ Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 	bridge = std::make_unique<Bridge>(*this);
 
 	mysqlManager = std::make_unique<MysqlManager>(*this);
-	if (mysqlManager->Init() && !mysqlManager->IsInstalled()) {
-		if (mysqlManager->Install()) {
-			mysqlManager->CreateConfig();
-		}
+	if (mysqlManager->Init()) {
+		mysqlManager->Install();
 	}
 }
 

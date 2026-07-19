@@ -20,17 +20,15 @@ public:
 	bool CreateConfig();     // 生成 my.ini
 	bool Uninstall();        // 卸载
 
-	// 运行
-	bool Start();
-	bool Stop();
-	bool Restart();
-
 	// Windows 服务
 	bool InstallService();
 	bool IsInstallService();
 	bool RemoveService();
-	bool StartService();
-	bool StopService();
+
+	// 运行
+	bool Start();
+	bool Stop();
+	bool Restart();
 
 	// 状态
 	bool IsInstalled() const;
@@ -70,6 +68,5 @@ private:
 	std::filesystem::path configPath_;
 
 	bool installed_{ false };
-	bool initialized_{ false };
 	bool running_{ false };
 };

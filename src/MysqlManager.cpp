@@ -7,8 +7,8 @@
 #include "head/AppLication.h"
 
 #pragma comment(lib, "Advapi32.lib")
-
 namespace fs = std::filesystem;
+constexpr wchar_t SERVICE_NAME[] = L"LocalMysql";
 
 MysqlManager::MysqlManager(const Application& app) :m_app(app) {};
 MysqlManager::~MysqlManager() = default;
@@ -20,25 +20,18 @@ bool MysqlManager::Init() {
 	resourcePath_ = exePath_ / L"resources";
 
 	wchar_t localAppData[MAX_PATH]{};
-	if (FAILED(SHGetFolderPathW(
-		nullptr,
-		CSIDL_LOCAL_APPDATA,
-		nullptr,
-		SHGFP_TYPE_CURRENT,
-		localAppData)))
+	if (FAILED(SHGetFolderPathW(nullptr, CSIDL_LOCAL_APPDATA, nullptr, SHGFP_TYPE_CURRENT, localAppData)))
 	{
 		return false;
 	}
 
-	rootPath_ = std::filesystem::path(localAppData) / L"LocalMysql";
+	rootPath_ = std::filesystem::path(localAppData) / SERVICE_NAME;
 	mysqlPath_ = rootPath_ / L"mysql";
 	dataPath_ = mysqlPath_ / L"data";
 	configPath_ = mysqlPath_ / L"my.ini";
 
 	// 创建工作目录
 	std::filesystem::create_directories(rootPath_);
-	// 判断是否已安装
-	installed_ = std::filesystem::exists(mysqlPath_ / L"bin" / L"mysqld.exe");
 
 	return true;
 }
@@ -47,30 +40,29 @@ bool MysqlManager::Install() {
 	if (installed_)
 		return true;
 
-	fs::path zip = resourcePath_ / L"mysql-8.4.10-winx64.zip";
-
-	if (!fs::exists(zip))
-		return false;
-
-	// 创建安装目录
-	fs::create_directories(rootPath_);
-
-	// 解压
 	if (!ExtractZip())
 		return false;
 
-	// 检查是否安装成功
-	installed_ = fs::exists(mysqlPath_ / L"bin" / L"mysqld.exe");
+	if (!CreateConfig())
+		return false;
 
-	return installed_;
+	if (!Initialize())
+		return false;
+
+	//if (!InstallService())
+	//	return false;
+
+	installed_ = true;
+	return true;
 }
+
 
 bool MysqlManager::IsInstalled() const {
 	return installed_;
 }
 
 bool MysqlManager::IsInitialized() const {
-	return initialized_;
+	return fs::exists(dataPath_ / L"mysql.ibd") && fs::exists(dataPath_ / L"ibdata1");
 }
 
 bool MysqlManager::CreateConfig()
@@ -88,8 +80,9 @@ bool MysqlManager::CreateConfig()
 			return false;
 
 		out << "[mysqld]\n";
-		out << "basedir=" << mysqlPath_.string() << "\n";
-		out << "datadir=" << dataPath_.string() << "\n";
+		out << "console\n";
+		out << "basedir=" << mysqlPath_.generic_string() << "\n";
+		out << "datadir=" << dataPath_.generic_string() << "\n";
 		out << "port=3306\n";
 		out << "character-set-server=utf8mb4\n";
 		out << "collation-server=utf8mb4_general_ci\n";
@@ -113,8 +106,11 @@ bool MysqlManager::CreateConfig()
 
 bool MysqlManager::ExtractZip()
 {
-	namespace fs = std::filesystem;
+	// 判断是否已安装
+	if (std::filesystem::exists(mysqlPath_ / L"bin" / L"mysqld.exe"))
+		return true;
 
+	namespace fs = std::filesystem;
 	fs::path zipPath = resourcePath_ / L"mysql-8.4.10-winx64.zip";
 
 	if (!fs::exists(zipPath))
@@ -215,9 +211,6 @@ bool MysqlManager::ExtractZip()
 
 bool MysqlManager::Initialize()
 {
-	if (initialized_)
-		return true;
-
 	namespace fs = std::filesystem;
 
 	fs::path mysqld = mysqlPath_ / L"bin" / L"mysqld.exe";
@@ -231,56 +224,76 @@ bool MysqlManager::Initialize()
 			return false;
 	}
 
-	//
-	// 已初始化判断
-	//
-	if (!fs::exists(dataPath_ / L"mysql.ibd") &&
-		!fs::exists(dataPath_ / L"ibdata1"))
+	// 已初始化
+	if (fs::exists(dataPath_ / L"ibdata1") &&
+		fs::exists(dataPath_ / L"mysql"))
 	{
-		std::wstring cmd =
-			L"\"" + mysqld.wstring() +
-			L"\" --defaults-file=\"" +
-			configPath_.wstring() +
-			L"\" --initialize-insecure";
-
-		STARTUPINFOW si{};
-		si.cb = sizeof(si);
-
-		PROCESS_INFORMATION pi{};
-
-		std::wstring command = cmd;
-
-		if (!CreateProcessW(
-			nullptr,
-			command.data(),
-			nullptr,
-			nullptr,
-			FALSE,
-			CREATE_NO_WINDOW,
-			nullptr,
-			mysqlPath_.wstring().c_str(),
-			&si,
-			&pi))
-		{
-			return false;
-		}
-
-		WaitForSingleObject(pi.hProcess, INFINITE);
-
-		DWORD exitCode = 0;
-		GetExitCodeProcess(pi.hProcess, &exitCode);
-
-		CloseHandle(pi.hThread);
-		CloseHandle(pi.hProcess);
-
-		if (exitCode != 0)
-			return false;
+		return true;
 	}
 
+	// 清理残留的初始化目录
+	if (fs::exists(dataPath_))
+	{
+		std::error_code ec;
+		fs::remove_all(dataPath_, ec);
+	}
 
-	initialized_ = true;
+	std::error_code ec;
+	fs::create_directories(dataPath_, ec);
 
-	return true;
+	std::wstring command =
+		L"\"" + mysqld.wstring() + L"\" "
+		L"--defaults-file=\"" + configPath_.wstring() + L"\" "
+		L"--initialize-insecure";
+
+	STARTUPINFOW si{};
+	si.cb = sizeof(si);
+
+	PROCESS_INFORMATION pi{};
+
+	std::wstring workDir = mysqlPath_.wstring();
+	std::vector<wchar_t> cmd(command.begin(), command.end());
+	cmd.push_back(L'\0');
+
+	if (!CreateProcessW(
+		nullptr,
+		cmd.data(),
+		nullptr,
+		nullptr,
+		FALSE,
+		CREATE_NO_WINDOW,
+		nullptr,
+		workDir.c_str(),
+		&si,
+		&pi))
+	{
+		return false;
+	}
+
+	WaitForSingleObject(pi.hProcess, INFINITE);
+
+	DWORD exitCode = 1;
+	GetExitCodeProcess(pi.hProcess, &exitCode);
+
+	CloseHandle(pi.hThread);
+	CloseHandle(pi.hProcess);
+
+	if (exitCode != 0)
+		return false;
+
+	// 等待初始化文件真正落盘
+	for (int i = 0; i < 100; ++i)
+	{
+		if (fs::exists(dataPath_ / L"ibdata1") &&
+			fs::exists(dataPath_ / L"mysql"))
+		{
+			return true;
+		}
+
+		Sleep(100);
+	}
+
+	return false;
 }
 
 bool MysqlManager::IsInstallService()
@@ -295,7 +308,7 @@ bool MysqlManager::IsInstallService()
 
 	SC_HANDLE service = OpenServiceW(
 		scm,
-		L"LocalMysql",
+		SERVICE_NAME,
 		SERVICE_QUERY_STATUS);
 
 	if (service)
@@ -308,105 +321,178 @@ bool MysqlManager::IsInstallService()
 	CloseServiceHandle(scm);
 	return false;
 }
-
-bool MysqlManager::InstallService() {
-
+bool MysqlManager::InstallService()
+{
 	std::filesystem::path mysqld = mysqlPath_ / L"bin" / L"mysqld.exe";
 
 	if (!std::filesystem::exists(mysqld))
 		return false;
 
-	SC_HANDLE scm = OpenSCManagerW(
-		nullptr,
-		nullptr,
-		SC_MANAGER_CREATE_SERVICE);
+
+	SC_HANDLE scm = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CREATE_SERVICE);
 
 	if (!scm)
-		//DWORD err = GetLastError();
-	return false;
+		return false;
 
-	// 服务已存在
-	SC_HANDLE service = OpenServiceW(
-		scm,
-		L"LocalMysql",
-		SERVICE_QUERY_STATUS);
 
-	if (service)
+	// 检查服务是否存在
+	SC_HANDLE oldService = OpenServiceW(scm, SERVICE_NAME, SERVICE_QUERY_STATUS);
+
+	if (oldService)
 	{
-		CloseServiceHandle(service);
+		CloseServiceHandle(oldService);
 		CloseServiceHandle(scm);
 		return true;
 	}
 
+	// mysqld启动命令
 	std::wstring command =
-		L"\"" + mysqld.wstring() +
-		L"\" --defaults-file=\"" +
+		L"\"" +
+		mysqld.wstring() +
+		L"\" "
+		L"--defaults-file=\"" +
 		configPath_.wstring() +
-		L"\"";
+		L"\" " +
+		SERVICE_NAME;
 
-	service = CreateServiceW(
+
+	SC_HANDLE service = CreateServiceW(
 		scm,
-
-		// Service Name
-		L"LocalMysql",
-
-		// Display Name
-		L"LocalMysql",
-
+		SERVICE_NAME,                  // 服务名
+		SERVICE_NAME,                  // 显示名称
 		SERVICE_ALL_ACCESS,
-
 		SERVICE_WIN32_OWN_PROCESS,
-
+		// 自动启动
 		SERVICE_AUTO_START,
-
 		SERVICE_ERROR_NORMAL,
-
 		command.c_str(),
+		nullptr,
+		nullptr,
+		nullptr,
+		nullptr,
+		nullptr
+	);
 
-		nullptr,
-		nullptr,
-		nullptr,
-		nullptr,
-		nullptr);
 
 	if (!service)
 	{
+		DWORD err = GetLastError();
+
 		CloseServiceHandle(scm);
 		return false;
 	}
 
-	// 可选：设置服务描述
-	SERVICE_DESCRIPTIONW desc{};
-	desc.lpDescription =
-		const_cast<LPWSTR>(L"本地Mysql:Local MySQL Server");
 
-	ChangeServiceConfig2W(
-		service,
-		SERVICE_CONFIG_DESCRIPTION,
-		&desc);
+	// 设置服务描述
+	SERVICE_DESCRIPTIONW desc{};
+
+	std::wstring description = L"本地Mysql服务(Local MySQL Server)";
+
+	desc.lpDescription = description.data();
+
+	ChangeServiceConfig2W(service, SERVICE_CONFIG_DESCRIPTION, &desc);
+
+	// 设置失败自动恢复
+	SERVICE_FAILURE_ACTIONSW failure{};
+
+	SC_ACTION actions[3]{};
+
+	actions[0].Type = SC_ACTION_RESTART;
+	actions[0].Delay = 5000;
+
+	actions[1].Type = SC_ACTION_RESTART;
+	actions[1].Delay = 10000;
+
+	actions[2].Type = SC_ACTION_NONE;
+
+	failure.dwResetPeriod = 86400;
+	failure.cActions = 3;
+	failure.lpsaActions = actions;
+
+	ChangeServiceConfig2W(service, SERVICE_CONFIG_FAILURE_ACTIONS, &failure);
 
 	CloseServiceHandle(service);
 	CloseServiceHandle(scm);
 
 	return true;
-};
+}
 
-bool MysqlManager::StopService() {
-	SC_HANDLE scm = OpenSCManagerW(
-		nullptr,
-		nullptr,
-		SC_MANAGER_CONNECT);
-
-	if (!scm)
+bool MysqlManager::RemoveService()
+{
+	SC_HANDLE scm = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
+	if (!scm) {
+		wprintf(L"OpenSCManagerW failed, error=%lu\n", GetLastError());
 		return false;
+	}
 
 	SC_HANDLE service = OpenServiceW(
 		scm,
-		L"LocalMysql",
-		SERVICE_START | SERVICE_QUERY_STATUS);
+		SERVICE_NAME,
+		SERVICE_STOP | DELETE | SERVICE_QUERY_STATUS
+	);
 
-	if (!service)
+	// 服务不存在，当作删除成功
+	if (!service) {
+		CloseServiceHandle(scm);
+		return true;
+	}
+
+	// 如果正在运行，先停止
+	SERVICE_STATUS_PROCESS status{};
+	DWORD bytesNeeded = 0;
+	if (QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
+		reinterpret_cast<LPBYTE>(&status), sizeof(status), &bytesNeeded))
 	{
+		if (status.dwCurrentState == SERVICE_RUNNING ||
+			status.dwCurrentState == SERVICE_START_PENDING)
+		{
+			ControlService(service, SERVICE_CONTROL_STOP, (LPSERVICE_STATUS)&status);
+
+			// 等待停止
+			while (QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
+				reinterpret_cast<LPBYTE>(&status), sizeof(status), &bytesNeeded))
+			{
+				if (status.dwCurrentState == SERVICE_STOPPED)
+					break;
+				Sleep(200);
+			}
+
+			// 如果还没停，强制杀进程
+			if (status.dwCurrentState != SERVICE_STOPPED && status.dwProcessId != 0) {
+				HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, status.dwProcessId);
+				if (hProc) {
+					TerminateProcess(hProc, 1);
+					CloseHandle(hProc);
+					wprintf(L"Force killed process PID=%lu\n", status.dwProcessId);
+				}
+			}
+		}
+	}
+
+	// 删除服务
+	BOOL ok = DeleteService(service);
+
+	CloseServiceHandle(service);
+	CloseServiceHandle(scm);
+
+	return ok == TRUE;
+}
+
+bool MysqlManager::Start()
+{
+	SC_HANDLE scm = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
+	if (!scm) {
+		wprintf(L"OpenSCManagerW failed, error=%lu\n", GetLastError());
+		return false;
+	}
+
+	SC_HANDLE service = OpenServiceW(
+		scm,
+		SERVICE_NAME,
+		SERVICE_START | SERVICE_QUERY_STATUS | SERVICE_QUERY_CONFIG
+	);
+	if (!service) {
+		wprintf(L"OpenServiceW failed, error=%lu\n", GetLastError());
 		CloseServiceHandle(scm);
 		return false;
 	}
@@ -414,46 +500,86 @@ bool MysqlManager::StopService() {
 	SERVICE_STATUS_PROCESS status{};
 	DWORD bytesNeeded = 0;
 
-	if (QueryServiceStatusEx(
-		service,
-		SC_STATUS_PROCESS_INFO,
-		reinterpret_cast<LPBYTE>(&status),
-		sizeof(status),
-		&bytesNeeded))
+	// 查询当前状态
+	if (QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
+		reinterpret_cast<LPBYTE>(&status), sizeof(status), &bytesNeeded))
 	{
-		if (status.dwCurrentState == SERVICE_RUNNING)
-		{
+		if (status.dwCurrentState == SERVICE_RUNNING) {
+			wprintf(L"Service already running.\n");
 			CloseServiceHandle(service);
 			CloseServiceHandle(scm);
+			running_ = true;
 			return true;
 		}
 	}
 
-	BOOL ok = ::StartServiceW(service, 0, nullptr);
-
-	if (!ok)
-	{
+	// 尝试启动服务
+	if (!StartServiceW(service, 0, nullptr)) {
 		DWORD err = GetLastError();
-
-		// 已经在运行
-		if (err != ERROR_SERVICE_ALREADY_RUNNING)
-		{
+		if (err != ERROR_SERVICE_ALREADY_RUNNING) {
+			wprintf(L"StartServiceW failed, error=%lu\n", err);
 			CloseServiceHandle(service);
 			CloseServiceHandle(scm);
 			return false;
 		}
 	}
 
+	// 等待服务进入运行状态
+	bool ok = false;
+	for (;;) {
+		if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
+			reinterpret_cast<LPBYTE>(&status), sizeof(status), &bytesNeeded))
+		{
+			wprintf(L"QueryServiceStatusEx failed, error=%lu\n", GetLastError());
+			break;
+		}
+
+		if (status.dwCurrentState == SERVICE_RUNNING) {
+			ok = true;
+			break;
+		}
+
+		if (status.dwCurrentState == SERVICE_STOPPED) {
+			wprintf(L"Service stopped. ExitCode=%lu, ServiceSpecific=%lu\n",
+				status.dwWin32ExitCode, status.dwServiceSpecificExitCode);
+			break;
+		}
+
+		if (status.dwCurrentState != SERVICE_START_PENDING) {
+			wprintf(L"Unexpected state=%lu\n", status.dwCurrentState);
+			break;
+		}
+
+		Sleep(200);
+	}
+
+	running_ = ok;
+
 	CloseServiceHandle(service);
 	CloseServiceHandle(scm);
 
-	return true;
-};
+	return ok;
+}
 
-bool MysqlManager::StartService() {
-	return false;
+bool MysqlManager::Stop() {
+	SC_HANDLE scm = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
+	if (!scm) return false;
 
-};
-bool MysqlManager::RemoveService() {
-	return false;
+	SC_HANDLE service = OpenServiceW(scm, SERVICE_NAME, SERVICE_STOP | SERVICE_QUERY_STATUS);
+	if (!service) {
+		CloseServiceHandle(scm);
+		return false;
+	}
+
+	SERVICE_STATUS status{};
+	if (ControlService(service, SERVICE_CONTROL_STOP, &status)) {
+		while (QueryServiceStatus(service, &status)) {
+			if (status.dwCurrentState == SERVICE_STOPPED) break;
+			Sleep(200);
+		}
+	}
+
+	CloseServiceHandle(service);
+	CloseServiceHandle(scm);
+	return status.dwCurrentState == SERVICE_STOPPED;
 };
