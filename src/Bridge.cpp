@@ -8,6 +8,7 @@ Bridge::Bridge(Application& app) : m_app(app) {}
 
 void Bridge::Init()
 {
+	OutputDebugStringW(L"Bridge::Init\n");
 	m_app.hkwebview->webview->add_WebMessageReceived(
 		Callback<ICoreWebView2WebMessageReceivedEventHandler>(
 			[this](ICoreWebView2* sender, ICoreWebView2WebMessageReceivedEventArgs* args)
@@ -32,15 +33,15 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 	//printf("Received message: %s\n", json.c_str());
 
 	std::string id = j.value("id", "");
-	auto data = j["data"];
-	std::string type = data.value("type", "");
+	auto obj = j["data"];
+	std::string type = obj.value("type", "");
 
 	// ========================
 	// 1. cpr 请求
 	// ========================
 	if (type == "cpr")
 	{
-		auto query = data["query"];
+		auto query = obj["query"];
 		std::string url = query.value("url", "");
 		std::string method = query.value("method", "");
 		cpr::Header headers;
@@ -49,55 +50,54 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 				headers[k] = v.get<std::string>();
 			}
 		}
-	if (url.empty() || (url.rfind("http://", 0) != 0 && url.rfind("https://", 0) != 0)) {
-		nlohmann::json res;
-		res["id"] = id;
-		res["data"] = { {"status", -1}, {"error", "invalid url"} };
-		Send(res);
-	} else {
-		std::thread([this, url, method, headers, id]() {
-			try {
-				NetContext context{
-					url,
-					method,
-					headers,
-					[this,id](cpr::Response r) {
-						nlohmann::json res;
-						res["id"] = id;
-						// cpr 返回可能包含错误信息在 r.error.message
-						if (r.status_code == 0 || !r.error.message.empty()) {
-							std::string msg = r.error.message.empty() ? "request failed" : r.error.message;
-							res["data"] = { {"status", 0}, {"error", msg} };
-						} else {
-							res["data"] = {
-								{"status", r.status_code},
-								{"body", r.text}
-							};
+		if (url.empty() || (url.rfind("http://", 0) != 0 && url.rfind("https://", 0) != 0)) {
+			nlohmann::json res;
+			res["id"] = id;
+			res["data"] = { {"status", -1}, {"error", "invalid url"} };
+			Send(res);
+		}
+		else {
+			std::thread([this, url, method, headers, id]() {
+				try {
+					NetContext context{
+						url,
+						method,
+						headers,
+						[this,id](cpr::Response r) {
+							nlohmann::json res;
+							res["id"] = id;
+							if (r.status_code == 0 || !r.error.message.empty()) {
+								std::string msg = r.error.message.empty() ? "request failed" : r.error.message;
+								res["data"] = { {"status", 0}, {"error", msg} };
+							}
+							else
+							{
+								res["data"] = {
+									{"status", r.status_code},
+									{"body", r.text}
+								};
+							}
+						  Send(res);
 						}
-						Send(res);
-					}
-				};
-				Net::Net(context);
-			} catch (const std::exception& e) {
-				nlohmann::json res;
-				res["id"] = id;
-				res["data"] = { {"status", -1}, {"error", e.what()} };
-				Send(res);
-			} catch (...) {
-				nlohmann::json res;
-				res["id"] = id;
-				res["data"] = { {"status", -1}, {"error", "unknown exception"} };
-				Send(res);
-			}
-		}).detach();
-	}
+					};
+					Net::Net(context);
+				}
+				catch (const std::exception& e)
+				{
+					nlohmann::json res;
+					res["id"] = id;
+					res["data"] = { {"status", -1}, {"error", e.what()} };
+					Send(res);
+				}
+				}).detach();
+		}
 	}
 	// ========================
 	// 窗口方法
 	// ========================
 	else if (type == "win")
 	{
-		auto action = data["data"].value("type", "");
+		auto action = obj["data"].value("type", "");
 		if (action == "toggleFullscreen")
 		{
 			m_app.window->ToggleFullscreen();
@@ -112,6 +112,19 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 			if (m_app.window->IsFullscreen()) {
 				m_app.window->ToggleFullscreen();
 			}
+		}
+	}
+	else if (type == "mysql") {
+		auto action = obj["data"].value("type", "");
+		if (action == "InstallService") {
+			m_app.mysqlManager->InstallService();
+		}
+		else if (action == "IsInstallService")
+		{
+			nlohmann::json res;
+			res["id"] = id;
+			res["data"] = m_app.mysqlManager->IsInstallService();
+			Send(res);
 		}
 	}
 	else

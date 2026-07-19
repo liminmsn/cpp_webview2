@@ -1,6 +1,137 @@
 #define UNICODE
 #define _UNICODE
 #include "head/Application.h"
+#include <shellapi.h>
+#pragma comment(lib, "Shell32.lib")
+
+
+static bool IsRunAsAdmin()
+{
+	BOOL isAdmin = FALSE;
+
+	SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+	PSID adminGroup = nullptr;
+
+	if (AllocateAndInitializeSid(
+		&NtAuthority,
+		2,
+		SECURITY_BUILTIN_DOMAIN_RID,
+		DOMAIN_ALIAS_RID_ADMINS,
+		0, 0, 0, 0, 0, 0,
+		&adminGroup))
+	{
+		CheckTokenMembership(nullptr, adminGroup, &isAdmin);
+		FreeSid(adminGroup);
+	}
+
+	return isAdmin == TRUE;
+}
+static bool RestartAsAdmin()
+{
+	wchar_t exePath[MAX_PATH]{};
+	GetModuleFileNameW(nullptr, exePath, MAX_PATH);
+
+	HINSTANCE h = ShellExecuteW(
+		nullptr,
+		L"runas",          // 请求 UAC
+		exePath,
+		nullptr,
+		nullptr,
+		SW_SHOWNORMAL);
+
+	return reinterpret_cast<INT_PTR>(h) > 32;
+}
+
+constexpr int DESIGN_WIDTH = 700;
+constexpr int DESIGN_HEIGHT = 500;
+inline static int ScaleByDpi(int value, UINT dpi)
+{
+	return MulDiv(value, dpi, 96);
+}
+
+
+Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc), m_hInst(hInst)
+{
+	m_wc.lpszClassName = m_className;
+	m_wc.lpfnWndProc = Application::StaticWndProc;
+
+	if (!RegisterClassW(&m_wc))
+	{
+		MessageBoxW(nullptr, L"注册窗口类失败", L"错误", MB_ICONERROR);
+		return;
+	}
+
+	UINT dpi = GetDpiForSystem();
+	int width = ScaleByDpi(DESIGN_WIDTH, dpi);
+	int height = ScaleByDpi(DESIGN_HEIGHT, dpi);
+
+	DWORD style = WS_OVERLAPPEDWINDOW;
+	// 去掉可缩放边框和最大化按钮
+	style &= ~WS_THICKFRAME;
+	style &= ~WS_MAXIMIZEBOX;
+
+	m_hwnd = CreateWindowExW(
+		WS_EX_NOREDIRECTIONBITMAP,
+		m_className,
+		L"本地Mysql",
+		style,
+		CW_USEDEFAULT,
+		CW_USEDEFAULT,
+		width,
+		height,
+		nullptr,
+		nullptr,
+		m_hInst,
+		this);
+
+	if (!m_hwnd)
+	{
+		MessageBoxW(nullptr, L"创建窗口失败", L"错误", MB_ICONERROR);
+		return;
+	}
+
+	if (!IsRunAsAdmin())
+	{
+		if (RestartAsAdmin())
+		{
+			// 当前进程直接退出
+			ExitProcess(0);
+		}
+
+		MessageBoxW(
+			nullptr,
+			L"需要管理员权限才能运行。",
+			L"错误",
+			MB_OK | MB_ICONERROR);
+
+		ExitProcess(0);
+	}
+
+
+	ShowWindow(m_hwnd, nCmdShow);
+	UpdateWindow(m_hwnd);
+	EnableDarkModeWindow(m_hwnd, TRUE);
+	window = std::make_unique<Window>(m_hwnd);
+	taskbar = std::make_unique<Taskbar>(m_hwnd);
+	hkwebview = std::make_unique<HKWebview>(*this);
+	bridge = std::make_unique<Bridge>(*this);
+
+	mysqlManager = std::make_unique<MysqlManager>(*this);
+	if (mysqlManager->Init() && !mysqlManager->IsInstalled()) {
+		if (mysqlManager->Install()) {
+			mysqlManager->CreateConfig();
+		}
+	}
+}
+
+
+Application::~Application()
+{
+	if (m_hwnd)
+		DestroyWindow(m_hwnd);
+	UnregisterClassW(m_className, m_hInst);
+}
+
 
 int Application::RunMessageLoop()
 {
@@ -62,73 +193,4 @@ LRESULT CALLBACK Application::StaticWndProc(HWND hwnd, UINT msg, WPARAM wParam, 
 		};
 
 	return MsgHandler(hwnd, msg, wParam, lParam);
-}
-
-Application::~Application()
-{
-	if (m_hwnd)
-		DestroyWindow(m_hwnd);
-	UnregisterClassW(m_className, m_hInst);
-}
-
-constexpr int DESIGN_WIDTH = 900;
-constexpr int DESIGN_HEIGHT = 700;
-inline int ScaleByDpi(int value, UINT dpi)
-{
-	return MulDiv(value, dpi, 96);
-}
-
-Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc), m_hInst(hInst)
-{
-	m_wc.lpszClassName = m_className;
-	m_wc.lpfnWndProc = Application::StaticWndProc;
-
-	if (!RegisterClassW(&m_wc))
-	{
-		MessageBoxW(nullptr, L"注册窗口类失败", L"错误", MB_ICONERROR);
-		return;
-	}
-	UINT dpi = GetDpiForSystem();
-	int width = ScaleByDpi(DESIGN_WIDTH, dpi);
-	int height = ScaleByDpi(DESIGN_HEIGHT, dpi);
-
-	DWORD style = WS_OVERLAPPEDWINDOW;
-	// 去掉可缩放边框和最大化按钮
-	style &= ~WS_THICKFRAME;
-	style &= ~WS_MAXIMIZEBOX;
-
-	m_hwnd = CreateWindowExW(
-		WS_EX_NOREDIRECTIONBITMAP,
-		m_className,
-		L"本地Mysql",
-		style,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		width,
-		height,
-		nullptr,
-		nullptr,
-		m_hInst,
-		this);
-
-	if (!m_hwnd)
-	{
-		MessageBoxW(nullptr, L"创建窗口失败", L"错误", MB_ICONERROR);
-		return;
-	}
-
-
-	ShowWindow(m_hwnd, nCmdShow);
-	UpdateWindow(m_hwnd);
-	//EnableDarkModeWindow(m_hwnd, TRUE);
-	window = std::make_unique<Window>(m_hwnd);
-	taskbar = std::make_unique<Taskbar>(m_hwnd);
-	hkwebview = std::make_unique<HKWebview>(*this);
-	bridge = std::make_unique<Bridge>(*this);
-	mysqlManager = std::make_unique<MysqlManager>(*this);
-	if (mysqlManager->Init()) {
-		if (!mysqlManager->IsInstalled()) {
-			mysqlManager->Install();
-		}
-	}
 }

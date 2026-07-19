@@ -3,12 +3,7 @@
 
 Taskbar::Taskbar(HWND hwnd) :hwnd_(hwnd)
 {
-	HRESULT hr = CoInitialize(nullptr);
-
-	if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
-		return;
-
-	hr = CoCreateInstance(
+	CoCreateInstance(
 		CLSID_TaskbarList,
 		nullptr,
 		CLSCTX_INPROC_SERVER,
