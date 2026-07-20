@@ -7,8 +7,8 @@
 
 
 Window::Window(HWND hwnd) : hwnd_(hwnd) {
-	DWM_SYSTEMBACKDROP_TYPE type = DWMSBT_TRANSIENTWINDOW;
-	DwmSetWindowAttribute(hwnd_, DWMWA_SYSTEMBACKDROP_TYPE, &type, sizeof(type));
+	//DWM_SYSTEMBACKDROP_TYPE type = DWMSBT_TRANSIENTWINDOW;
+	//DwmSetWindowAttribute(hwnd_, DWMWA_SYSTEMBACKDROP_TYPE, &type, sizeof(type));
 }
 
 void Window::Minimize()

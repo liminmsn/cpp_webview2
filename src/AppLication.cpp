@@ -55,6 +55,20 @@ LRESULT CALLBACK Application::StaticWndProc(HWND hwnd, UINT msg, WPARAM wParam, 
 				}
 				return 0;
 			}
+			case WM_APP + 2:
+			{
+				ReleaseCapture();
+				SendMessageW(h, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
+				return 0;
+			}
+			case WM_NCHITTEST:
+			{
+				LRESULT hit = DefWindowProcW(h, m, w, l);
+				if (hit == HTCLIENT)
+					return HTCAPTION;
+
+				return hit;
+			}
 			default:
 				break;
 			}
@@ -71,8 +85,8 @@ Application::~Application()
 	UnregisterClassW(m_className, m_hInst);
 }
 
-constexpr int DESIGN_WIDTH = 1200;
-constexpr int DESIGN_HEIGHT = 800;
+constexpr int DESIGN_WIDTH = 350;
+constexpr int DESIGN_HEIGHT = 350;
 inline int ScaleByDpi(int value, UINT dpi)
 {
 	return MulDiv(value, dpi, 96);
@@ -92,18 +106,41 @@ Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 	int width = ScaleByDpi(DESIGN_WIDTH, dpi);
 	int height = ScaleByDpi(DESIGN_HEIGHT, dpi);
 
-	DWORD style = WS_OVERLAPPEDWINDOW;
-	// 去掉可缩放边框和最大化按钮
-	style &= ~WS_THICKFRAME;
-	style &= ~WS_MAXIMIZEBOX;
+	//DWORD style = WS_OVERLAPPEDWINDOW;
+	//// 去掉可缩放边框和最大化按钮
+	//style &= ~WS_THICKFRAME;
+	//style &= ~WS_MAXIMIZEBOX;
+	//m_hwnd = CreateWindowExW(
+	//	WS_EX_NOREDIRECTIONBITMAP,
+	//	m_className,
+	//	L"CppCocos",
+	//	style,
+	//	CW_USEDEFAULT,
+	//	CW_USEDEFAULT,
+	//	width,
+	//	height,
+	//	nullptr,
+	//	nullptr,
+	//	m_hInst,
+	//	this);
+
+	RECT workArea{};
+	SystemParametersInfoW(
+		SPI_GETWORKAREA,
+		0,
+		&workArea,
+		0);
+
+	int x = workArea.right - width;
+	int y = workArea.bottom - height;
 
 	m_hwnd = CreateWindowExW(
-		WS_EX_NOREDIRECTIONBITMAP,
+		WS_EX_APPWINDOW,
 		m_className,
-		L"Webview2窗口程序",
-		style,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
+		L"CppCocos",
+		WS_POPUP,
+		x,
+		y,
 		width,
 		height,
 		nullptr,

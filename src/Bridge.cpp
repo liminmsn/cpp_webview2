@@ -1,5 +1,4 @@
 #include "head/Bridge.h"
-#include "head/Net.h"
 #include "head/AppLication.h"
 #include "utils/Encoding.h"
 
