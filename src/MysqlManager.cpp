@@ -478,6 +478,63 @@ bool MysqlManager::RemoveService()
 	return ok == TRUE;
 }
 
+bool MysqlManager::IsRunning() const
+{
+	SC_HANDLE scm = OpenSCManagerW(
+		nullptr,
+		nullptr,
+		SC_MANAGER_CONNECT
+	);
+
+	if (!scm)
+		return false;
+
+
+	SC_HANDLE service = OpenServiceW(
+		scm,
+		SERVICE_NAME,
+		SERVICE_QUERY_STATUS
+	);
+
+	if (!service)
+	{
+		CloseServiceHandle(scm);
+		return false;
+	}
+
+
+	SERVICE_STATUS_PROCESS status{};
+	DWORD size = 0;
+
+	bool result = false;
+
+	if (QueryServiceStatusEx(
+		service,
+		SC_STATUS_PROCESS_INFO,
+		reinterpret_cast<LPBYTE>(&status),
+		sizeof(status),
+		&size))
+	{
+		switch (status.dwCurrentState)
+		{
+		case SERVICE_RUNNING:
+		case SERVICE_START_PENDING:
+			result = true;
+			break;
+
+		default:
+			result = false;
+			break;
+		}
+	}
+
+
+	CloseServiceHandle(service);
+	CloseServiceHandle(scm);
+
+	return result;
+}
+
 bool MysqlManager::Start()
 {
 	SC_HANDLE scm = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);

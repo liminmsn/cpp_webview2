@@ -125,11 +125,6 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 		if (action == "InstallService") {
 			res["data"] = m_app.mysqlManager->InstallService();
 		}
-		else if (action == "IsInstallService")
-		{
-			res["data"] = m_app.mysqlManager->IsInstallService();
-
-		}
 		else if (action == "RemoveService")
 		{
 			res["data"] = !m_app.mysqlManager->RemoveService();
@@ -141,6 +136,24 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 		else if (action == "Stop")
 		{
 			res["data"] = !m_app.mysqlManager->Stop();
+		}
+		else if (action == "IsInstallService")
+		{
+			res["data"] = m_app.mysqlManager->IsInstallService();
+
+		}
+		else if (action == "GetState")
+		{
+			auto& data = res["data"];
+
+			auto mysql = m_app.mysqlManager.get();
+			data["installed"] = mysql->IsInstallService();
+			data["running"] = mysql->IsRunning();
+
+			// 服务状态
+			data["status"] = mysql->IsRunning()
+				? "running"
+				: "stopped";
 		}
 		Send(res);
 	}
