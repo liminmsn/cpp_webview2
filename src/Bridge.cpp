@@ -1,4 +1,3 @@
-#include "cpr/cpr.h"
 #include "head/Bridge.h"
 #include "head/Net.h"
 #include "head/AppLication.h"
@@ -34,68 +33,10 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 	std::string id = j.value("id", "");
 	auto data = j["data"];
 	std::string type = data.value("type", "");
-
-	// ========================
-	// 1. cpr 请求
-	// ========================
-	if (type == "cpr")
-	{
-		auto query = data["query"];
-		std::string url = query.value("url", "");
-		std::string method = query.value("method", "");
-		cpr::Header headers;
-		if (query.contains("head") && query["head"].is_object()) {
-			for (auto& [k, v] : query["head"].items()) {
-				headers[k] = v.get<std::string>();
-			}
-		}
-	if (url.empty() || (url.rfind("http://", 0) != 0 && url.rfind("https://", 0) != 0)) {
-		nlohmann::json res;
-		res["id"] = id;
-		res["data"] = { {"status", -1}, {"error", "invalid url"} };
-		Send(res);
-	} else {
-		std::thread([this, url, method, headers, id]() {
-			try {
-				NetContext context{
-					url,
-					method,
-					headers,
-					[this,id](cpr::Response r) {
-						nlohmann::json res;
-						res["id"] = id;
-						// cpr 返回可能包含错误信息在 r.error.message
-						if (r.status_code == 0 || !r.error.message.empty()) {
-							std::string msg = r.error.message.empty() ? "request failed" : r.error.message;
-							res["data"] = { {"status", 0}, {"error", msg} };
-						} else {
-							res["data"] = {
-								{"status", r.status_code},
-								{"body", r.text}
-							};
-						}
-						Send(res);
-					}
-				};
-				Net::Net(context);
-			} catch (const std::exception& e) {
-				nlohmann::json res;
-				res["id"] = id;
-				res["data"] = { {"status", -1}, {"error", e.what()} };
-				Send(res);
-			} catch (...) {
-				nlohmann::json res;
-				res["id"] = id;
-				res["data"] = { {"status", -1}, {"error", "unknown exception"} };
-				Send(res);
-			}
-		}).detach();
-	}
-	}
 	// ========================
 	// 窗口方法
 	// ========================
-	else if (type == "win")
+	if (type == "win")
 	{
 		auto action = data["data"].value("type", "");
 		if (action == "toggleFullscreen")
