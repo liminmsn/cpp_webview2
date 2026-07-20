@@ -110,7 +110,7 @@ Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 
 	ShowWindow(m_hwnd, nCmdShow);
 	UpdateWindow(m_hwnd);
-	EnableDarkModeWindow(m_hwnd, TRUE);
+	//EnableDarkModeWindow(m_hwnd, TRUE);
 	window = std::make_unique<Window>(m_hwnd);
 	taskbar = std::make_unique<Taskbar>(m_hwnd);
 	hkwebview = std::make_unique<HKWebview>(*this);

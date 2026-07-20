@@ -1,10 +1,8 @@
 #pragma once
-
 #include <filesystem>
 #include <string>
 
 class Application;
-
 class MysqlManager
 {
 public:
@@ -35,22 +33,25 @@ public:
 	bool IsInitialized() const;
 	bool IsRunning() const;
 
-	// SQL
-	bool Connect(
-		const std::string& host,
-		int port,
-		const std::string& user,
-		const std::string& password);
+	//// SQL
+	//bool Connect(
+	//	int port,
+	//	const std::string& host,
+	//	const std::string& user,
+	//	const std::string& password);
 
-	void Disconnect();
+	//void Disconnect();
 
-	std::string Execute(const std::string& sql);
+	//std::string Execute(const std::string& sql);
 
 	// 路径
-	const std::filesystem::path& GetRootPath() const;
-	const std::filesystem::path& GetMysqlPath() const;
-	const std::filesystem::path& GetDataPath() const;
-	const std::filesystem::path& GetConfigPath() const;
+	//const std::filesystem::path& GetRootPath() const;
+	//const std::filesystem::path& GetMysqlPath() const;
+	//const std::filesystem::path& GetDataPath() const;
+	//const std::filesystem::path& GetConfigPath() const;
+	bool StartTerminal();
+	void WriteTerminal(const std::wstring& text);
+	void StopTerminal();
 
 private:
 	bool ExtractZip();
@@ -69,4 +70,9 @@ private:
 
 	bool installed_{ false };
 	bool running_{ false };
+
+	HANDLE hProcess_ = nullptr;
+	HANDLE hInputWrite_ = nullptr;
+	HANDLE hOutputRead_ = nullptr;
+	std::thread outputThread_;
 };
