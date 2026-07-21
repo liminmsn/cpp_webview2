@@ -123,7 +123,7 @@ void HKWebview::InitSettings()
 	settings->put_AreDefaultContextMenusEnabled(FALSE);
 	settings->put_IsZoomControlEnabled(FALSE);
 
-	// 开启 HTML 拖拽区域支持（如果 SDK 支持）
+	// 开启 HTML 拖拽区域支持
 	ComPtr<ICoreWebView2Settings9> settings9;
 	if (SUCCEEDED(settings.As(&settings9)))
 	{

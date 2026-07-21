@@ -178,7 +178,7 @@
     "_priority": 1073741824,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 360,
+    "_orthoHeight": 175,
     "_near": 1,
     "_far": 2000,
     "_color": {
@@ -358,7 +358,7 @@
     "_string": "button",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 25.372499525547028,
+    "_actualFontSize": 20,
     "_fontSize": 20,
     "_fontFamily": "Arial",
     "_lineHeight": 40,
@@ -857,7 +857,7 @@
     },
     "_depth": 1,
     "_stencil": 0,
-    "_clearFlags": 7,
+    "_clearFlags": 6,
     "_rect": {
       "__type__": "cc.Rect",
       "x": 0,
