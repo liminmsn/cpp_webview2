@@ -44,15 +44,18 @@ set_target_properties(cpp_webview2 PROPERTIES
 target_link_libraries(cpp_webview2 PRIVATE
     unofficial::webview2::webview2
     nlohmann_json::nlohmann_json
-    cpr::cpr              # ✅ 注意这里要写 cpr::cpr，而不是 cpr
-    dcomp                 # DirectComposition
-    dwmapi                # DWM API
-)
-
-# Windows SDK 依赖（可选，确保链接到系统库）
-target_link_libraries(cpp_webview2 PRIVATE
+    cpr::cpr
+    dcomp
+    dwmapi
     user32
     gdi32
     ole32
     shell32
+)
+
+
+# Debug / Release 宏
+target_compile_definitions(cpp_webview2 PRIVATE
+    $<$<CONFIG:Debug>:CoCos_DEBUG>
+    $<$<CONFIG:Release>:CoCos_RELEASE>
 )
