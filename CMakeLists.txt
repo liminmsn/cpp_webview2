@@ -56,6 +56,6 @@ target_link_libraries(cpp_webview2 PRIVATE
 
 # Debug / Release 宏
 target_compile_definitions(cpp_webview2 PRIVATE
-    $<$<CONFIG:Debug>:CoCos_DEBUG>
-    $<$<CONFIG:Release>:CoCos_RELEASE>
+    $<$<CONFIG:Debug>:WEBVIEW_DEBUG>
+    $<$<CONFIG:Release>:WEBVIEW_RELEASE>
 )
