@@ -8,10 +8,10 @@ class Bridge
 {
 public:
 	explicit Bridge(Application& app);
+	void Send(const json& json);
 	void Init();
 
 private:
 	void OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceivedEventArgs* args);
-	void Send(const json& json);
 	Application& m_app;
 };

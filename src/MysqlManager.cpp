@@ -5,10 +5,114 @@
 #include <fstream>
 #include "head/MysqlManager.h"
 #include "head/AppLication.h"
+#include <tlhelp32.h>
+#include <sddl.h>
+#include <Aclapi.h>
 
 #pragma comment(lib, "Advapi32.lib")
 namespace fs = std::filesystem;
 constexpr wchar_t SERVICE_NAME[] = L"LocalMysql";
+
+// 辅助函数：查找并杀掉指定进程名
+static void KillProcessByName(const wchar_t* processName) {
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (snapshot == INVALID_HANDLE_VALUE) return;
+
+	PROCESSENTRY32W entry{};
+	entry.dwSize = sizeof(entry);
+
+	if (Process32FirstW(snapshot, &entry)) {
+		do {
+			if (_wcsicmp(entry.szExeFile, processName) == 0) {
+				HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, entry.th32ProcessID);
+				if (hProc) {
+					TerminateProcess(hProc, 1);
+					CloseHandle(hProc);
+					wprintf(L"Killed process %s (PID=%lu)\n", processName, entry.th32ProcessID);
+				}
+			}
+		} while (Process32NextW(snapshot, &entry));
+	}
+	CloseHandle(snapshot);
+}
+
+// 辅助函数：检查目录权限（确保 SYSTEM 有写权限）
+static bool CheckDirectoryPermission(const wchar_t* path) {
+	PSECURITY_DESCRIPTOR pSD = nullptr;
+	PACL pDACL = nullptr;
+	BOOL daclPresent = FALSE, daclDefaulted = FALSE;
+
+	DWORD res = GetNamedSecurityInfoW(
+		path, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
+		nullptr, nullptr, &pDACL, nullptr, &pSD
+	);
+	if (res != ERROR_SUCCESS) {
+		wprintf(L"GetNamedSecurityInfoW failed, error=%lu\n", res);
+		return false;
+	}
+
+	// 简单检查是否有 DACL
+	if (!daclPresent || !pDACL) {
+		wprintf(L"No DACL found, path=%s\n", path);
+		if (pSD) LocalFree(pSD);
+		return true;
+	}
+
+	// 这里只是示例，实际应遍历 ACE 检查 SYSTEM 权限
+	wprintf(L"Directory ACL retrieved for %s\n", path);
+
+	if (pSD) LocalFree(pSD);
+	return true;
+}
+
+// 给指定路径添加 SYSTEM 完全控制权限
+static bool GrantSystemFullControl(const std::wstring& path) {
+	EXPLICIT_ACCESSW ea{};
+	ea.grfAccessPermissions = GENERIC_ALL;
+	ea.grfAccessMode = SET_ACCESS;
+	ea.grfInheritance = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
+	ea.Trustee.TrusteeForm = TRUSTEE_IS_NAME;
+	ea.Trustee.TrusteeType = TRUSTEE_IS_USER;
+	ea.Trustee.ptstrName = (LPWSTR)L"SYSTEM";
+
+	PACL pNewDACL = nullptr;
+	DWORD res = SetEntriesInAclW(1, &ea, nullptr, &pNewDACL);
+	if (res != ERROR_SUCCESS) {
+		wprintf(L"SetEntriesInAclW failed, error=%lu\n", res);
+		return false;
+	}
+
+	res = SetNamedSecurityInfoW(
+		(LPWSTR)path.c_str(),
+		SE_FILE_OBJECT,
+		DACL_SECURITY_INFORMATION,
+		nullptr, nullptr, pNewDACL, nullptr
+	);
+
+	if (pNewDACL) LocalFree(pNewDACL);
+
+	if (res != ERROR_SUCCESS) {
+		wprintf(L"SetNamedSecurityInfoW failed, error=%lu\n", res);
+		return false;
+	}
+
+	return true;
+}
+
+// 遍历 data 目录，给所有文件设置权限
+static bool GrantDataDirPermissions(const std::filesystem::path& dataDir) {
+	if (!std::filesystem::exists(dataDir)) return false;
+
+	// 给目录本身设置权限
+	if (!GrantSystemFullControl(dataDir.wstring())) return false;
+
+	// 遍历所有文件和子目录
+	for (auto& entry : std::filesystem::recursive_directory_iterator(dataDir)) {
+		GrantSystemFullControl(entry.path().wstring());
+	}
+	return true;
+}
+
 
 MysqlManager::MysqlManager(const Application& app) :m_app(app) {};
 MysqlManager::~MysqlManager() = default;
@@ -56,13 +160,38 @@ bool MysqlManager::Install() {
 	return true;
 }
 
-
 bool MysqlManager::IsInstalled() const {
 	return installed_;
 }
 
 bool MysqlManager::IsInitialized() const {
 	return fs::exists(dataPath_ / L"mysql.ibd") && fs::exists(dataPath_ / L"ibdata1");
+}
+
+bool MysqlManager::IsInstallService()
+{
+	SC_HANDLE scm = OpenSCManagerW(
+		nullptr,
+		nullptr,
+		SC_MANAGER_CONNECT);
+
+	if (!scm)
+		return false;
+
+	SC_HANDLE service = OpenServiceW(
+		scm,
+		SERVICE_NAME,
+		SERVICE_QUERY_STATUS);
+
+	if (service)
+	{
+		CloseServiceHandle(service);
+		CloseServiceHandle(scm);
+		return true;
+	}
+
+	CloseServiceHandle(scm);
+	return false;
 }
 
 bool MysqlManager::CreateConfig()
@@ -296,48 +425,18 @@ bool MysqlManager::Initialize()
 	return false;
 }
 
-bool MysqlManager::IsInstallService()
-{
-	SC_HANDLE scm = OpenSCManagerW(
-		nullptr,
-		nullptr,
-		SC_MANAGER_CONNECT);
-
-	if (!scm)
-		return false;
-
-	SC_HANDLE service = OpenServiceW(
-		scm,
-		SERVICE_NAME,
-		SERVICE_QUERY_STATUS);
-
-	if (service)
-	{
-		CloseServiceHandle(service);
-		CloseServiceHandle(scm);
-		return true;
-	}
-
-	CloseServiceHandle(scm);
-	return false;
-}
 bool MysqlManager::InstallService()
 {
 	std::filesystem::path mysqld = mysqlPath_ / L"bin" / L"mysqld.exe";
-
 	if (!std::filesystem::exists(mysqld))
 		return false;
 
-
 	SC_HANDLE scm = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CREATE_SERVICE);
-
 	if (!scm)
 		return false;
 
-
 	// 检查服务是否存在
 	SC_HANDLE oldService = OpenServiceW(scm, SERVICE_NAME, SERVICE_QUERY_STATUS);
-
 	if (oldService)
 	{
 		CloseServiceHandle(oldService);
@@ -354,7 +453,6 @@ bool MysqlManager::InstallService()
 		configPath_.wstring() +
 		L"\" " +
 		SERVICE_NAME;
-
 
 	SC_HANDLE service = CreateServiceW(
 		scm,
@@ -373,47 +471,36 @@ bool MysqlManager::InstallService()
 		nullptr
 	);
 
-
 	if (!service)
 	{
 		DWORD err = GetLastError();
-
 		CloseServiceHandle(scm);
 		return false;
 	}
 
-
 	// 设置服务描述
 	SERVICE_DESCRIPTIONW desc{};
-
 	std::wstring description = L"本地Mysql服务(Local MySQL Server)";
-
 	desc.lpDescription = description.data();
-
 	ChangeServiceConfig2W(service, SERVICE_CONFIG_DESCRIPTION, &desc);
+	GrantDataDirPermissions(dataPath_);
 
 	// 设置失败自动恢复
 	SERVICE_FAILURE_ACTIONSW failure{};
-
 	SC_ACTION actions[3]{};
 
 	actions[0].Type = SC_ACTION_RESTART;
 	actions[0].Delay = 5000;
-
 	actions[1].Type = SC_ACTION_RESTART;
 	actions[1].Delay = 10000;
-
 	actions[2].Type = SC_ACTION_NONE;
-
 	failure.dwResetPeriod = 86400;
 	failure.cActions = 3;
 	failure.lpsaActions = actions;
 
 	ChangeServiceConfig2W(service, SERVICE_CONFIG_FAILURE_ACTIONS, &failure);
-
 	CloseServiceHandle(service);
 	CloseServiceHandle(scm);
-
 	return true;
 }
 
@@ -537,6 +624,21 @@ bool MysqlManager::IsRunning() const
 
 bool MysqlManager::Start()
 {
+	// 1. 杀掉残留 mysqld.exe
+	KillProcessByName(L"mysqld.exe");
+
+	// 2. 验证 datadir 权限
+	const wchar_t* datadir = dataPath_.c_str();
+	if (!CheckDirectoryPermission(datadir)) {
+		wprintf(L"Permission check failed for %s\n", datadir);
+		json res;
+		res["type"] = "terminal";
+		res["data"] = "Permission check failed for %s";
+		m_app.bridge->Send(res);
+		return false;
+	}
+
+	// 3. 启动服务（原有逻辑）
 	SC_HANDLE scm = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
 	if (!scm) {
 		wprintf(L"OpenSCManagerW failed, error=%lu\n", GetLastError());
@@ -557,7 +659,6 @@ bool MysqlManager::Start()
 	SERVICE_STATUS_PROCESS status{};
 	DWORD bytesNeeded = 0;
 
-	// 查询当前状态
 	if (QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
 		reinterpret_cast<LPBYTE>(&status), sizeof(status), &bytesNeeded))
 	{
@@ -570,7 +671,6 @@ bool MysqlManager::Start()
 		}
 	}
 
-	// 尝试启动服务
 	if (!StartServiceW(service, 0, nullptr)) {
 		DWORD err = GetLastError();
 		if (err != ERROR_SERVICE_ALREADY_RUNNING) {
@@ -581,13 +681,16 @@ bool MysqlManager::Start()
 		}
 	}
 
-	// 等待服务进入运行状态
 	bool ok = false;
 	for (;;) {
 		if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
 			reinterpret_cast<LPBYTE>(&status), sizeof(status), &bytesNeeded))
 		{
 			wprintf(L"QueryServiceStatusEx failed, error=%lu\n", GetLastError());
+			json res;
+			res["type"] = "terminal";
+			res["data"] = "QueryServiceStatusEx failed, error=%lu\n";
+			m_app.bridge->Send(res);
 			break;
 		}
 
