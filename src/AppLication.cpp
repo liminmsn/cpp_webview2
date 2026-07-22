@@ -100,7 +100,7 @@ Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 	m_hwnd = CreateWindowExW(
 		WS_EX_NOREDIRECTIONBITMAP,
 		m_className,
-		L"Webview2窗口程序",
+		L"好看韩剧5",
 		style,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
