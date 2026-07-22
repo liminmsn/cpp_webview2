@@ -122,46 +122,48 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 
 		nlohmann::json res;
 		res["id"] = id;
+
+		auto& mysql = m_app.mysqlManager;
 		if (action == "InstallService") {
-			res["data"] = m_app.mysqlManager->InstallService();
+			res["data"] = mysql->InstallService();
 		}
 		else if (action == "RemoveService")
 		{
-			res["data"] = !m_app.mysqlManager->RemoveService();
+			res["data"] = mysql->RemoveService();
 		}
 		else if (action == "Start")
 		{
-			res["data"] = m_app.mysqlManager->Start();
+			res["data"] = mysql->Start();
 		}
 		else if (action == "Stop")
 		{
-			res["data"] = !m_app.mysqlManager->Stop();
+			res["data"] = mysql->Stop();
 		}
 		else if (action == "IsInstallService")
 		{
-			res["data"] = m_app.mysqlManager->IsInstallService();
-
+			res["data"] = mysql->IsInstallService();
 		}
 		else if (action == "GetState")
 		{
 			auto& data = res["data"];
-
-			auto mysql = m_app.mysqlManager.get();
 			data["installed"] = mysql->IsInstallService();
 			data["running"] = mysql->IsRunning();
-
 			// 服务状态
 			data["status"] = mysql->IsRunning()
 				? "running"
 				: "stopped";
 		}
+		else if (action == "StartTerminal") {
+			auto& data = res["data"];
+			data["status"] = mysql->StartTerminal();
+		}
 		Send(res);
 	}
-	// ========================
-	// 默认返回
-	// ========================
 	else
 	{
+		// ========================
+		// 默认返回
+		// ========================
 		Send(j);
 	}
 }

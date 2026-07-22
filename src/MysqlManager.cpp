@@ -800,3 +800,12 @@ bool MysqlManager::StartTerminal()
 	CloseHandle(pi.hThread);
 	return true;
 }
+
+
+void MysqlManager::StopTerminal() {
+
+}
+
+void MysqlManager::WriteTerminal(const std::wstring& text){
+
+}
