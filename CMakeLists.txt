@@ -38,7 +38,7 @@ add_executable(cpp_webview2
 
 # 输出名称
 set_target_properties(cpp_webview2 PROPERTIES
-    OUTPUT_NAME "本地Mysql"
+    OUTPUT_NAME "本地Mysql 8.4.10"
 )
 
 # 链接库
@@ -47,12 +47,8 @@ target_link_libraries(cpp_webview2 PRIVATE
     nlohmann_json::nlohmann_json
     miniz::miniz
     cpr::cpr
-    dcomp             
+    dcomp
     dwmapi
-)
-
-# Windows SDK 依赖（可选，确保链接到系统库）
-target_link_libraries(cpp_webview2 PRIVATE
     user32
     gdi32
     ole32
