@@ -113,7 +113,6 @@ static bool GrantDataDirPermissions(const std::filesystem::path& dataDir) {
 	return true;
 }
 
-
 MysqlManager::MysqlManager(const Application& app) :m_app(app) {};
 MysqlManager::~MysqlManager() = default;
 
@@ -166,6 +165,14 @@ bool MysqlManager::IsInstalled() const {
 
 bool MysqlManager::IsInitialized() const {
 	return fs::exists(dataPath_ / L"mysql.ibd") && fs::exists(dataPath_ / L"ibdata1");
+}
+
+std::filesystem::path MysqlManager::GetMysqlPath() const {
+	return mysqlPath_;
+}
+
+std::filesystem::path MysqlManager::GetMysqlConfigPath() const {
+	return configPath_;
 }
 
 bool MysqlManager::IsInstallService()
@@ -743,69 +750,3 @@ bool MysqlManager::Stop() {
 	CloseServiceHandle(scm);
 	return status.dwCurrentState == SERVICE_STOPPED;
 };
-
-bool MysqlManager::RunCommand(const std::wstring& command) {
-	return true;
-}
-
-bool MysqlManager::StartTerminal()
-{
-	SECURITY_ATTRIBUTES sa{};
-	sa.nLength = sizeof(sa);
-	sa.bInheritHandle = TRUE;
-
-	HANDLE outputRead;
-	HANDLE outputWrite;
-
-	CreatePipe(&outputRead, &outputWrite, &sa, 0);
-	SetHandleInformation(outputRead, HANDLE_FLAG_INHERIT, 0);
-
-	HANDLE inputRead;
-	HANDLE inputWrite;
-
-	CreatePipe(&inputRead, &inputWrite, &sa, 0);
-	SetHandleInformation(inputWrite, HANDLE_FLAG_INHERIT, 0);
-
-	STARTUPINFOW si{};
-	si.cb = sizeof(si);
-
-	si.dwFlags = STARTF_USESTDHANDLES;
-	si.hStdInput = inputRead;
-	si.hStdOutput = outputWrite;
-	si.hStdError = outputWrite;
-
-	PROCESS_INFORMATION pi{};
-	std::wstring cmd = L"cmd.exe";
-
-	if (!CreateProcessW(
-		nullptr,
-		cmd.data(),
-		nullptr,
-		nullptr,
-		TRUE,
-		CREATE_NO_WINDOW,
-		nullptr,
-		mysqlPath_.c_str(),
-		&si,
-		&pi))
-	{
-		return false;
-	}
-
-	CloseHandle(inputRead);
-	CloseHandle(outputWrite);
-	hProcess_ = pi.hProcess;
-	hInputWrite_ = inputWrite;
-	hOutputRead_ = outputRead;
-	CloseHandle(pi.hThread);
-	return true;
-}
-
-
-void MysqlManager::StopTerminal() {
-
-}
-
-void MysqlManager::WriteTerminal(const std::wstring& text){
-
-}

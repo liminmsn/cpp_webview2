@@ -35,6 +35,9 @@ public:
 	bool IsInitialized() const;
 	bool IsRunning() const;
 
+	std::filesystem::path GetMysqlPath() const;
+	std::filesystem::path GetMysqlConfigPath() const;
+
 	//// SQL
 	//bool Connect(
 	//	int port,
@@ -51,13 +54,13 @@ public:
 	//const std::filesystem::path& GetMysqlPath() const;
 	//const std::filesystem::path& GetDataPath() const;
 	//const std::filesystem::path& GetConfigPath() const;
-	bool StartTerminal();
-	void WriteTerminal(const std::wstring& text);
-	void StopTerminal();
+	//bool StartTerminal();
+	//void WriteTerminal(const std::wstring& text);
+	//void StopTerminal();
 
 private:
 	bool ExtractZip();
-	bool RunCommand(const std::wstring& command);
+	//bool RunCommand(const std::wstring& command);
 
 private:
 	const Application& m_app;
@@ -73,8 +76,5 @@ private:
 	bool installed_{ false };
 	bool running_{ false };
 
-	HANDLE hProcess_ = nullptr;
-	HANDLE hInputWrite_ = nullptr;
-	HANDLE hOutputRead_ = nullptr;
 	std::thread outputThread_;
 };
