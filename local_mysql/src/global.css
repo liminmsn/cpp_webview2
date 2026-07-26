@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+@import "xterm/css/xterm.css";
+@import "./theme/netflix.css";
+@import "./theme/cyber.css";
+
+::-webkit-scrollbar {
+  background: var(--color-accent-soft);
+  appearance: none;
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-thumb {
+  appearance: none;
+  background: var(--color-accent);
+}
+
+html{
+  overflow-x: hidden;
+}
+#root {
+  height: 100vh;
+}

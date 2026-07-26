@@ -1,0 +1,136 @@
+/*
+ * HeroUI Cyber Workshop Theme
+ * Designed for Windows 11 Mica / Acrylic
+ */
+
+[data-theme^="cyber-"] {
+   --radius: .1rem;
+   --field-radius: .25rem;
+   --font-sans: var(--font-inter);
+}
+
+[data-theme="cyber-dark"] {
+
+   color-scheme: dark;
+
+   /* ==========================
+       Brand
+       ========================== */
+
+   --accent: oklch(68% .18 38);
+   --accent-foreground: white;
+
+   /* ==========================
+       Window
+       ========================== */
+
+   --background: transparent;
+
+   /* ==========================
+       Text
+       ========================== */
+
+   --foreground: rgba(245, 239, 232, 1);
+   --muted: rgba(188, 168, 150, 1);
+
+   /* ==========================
+       Main Surface
+       ========================== */
+
+   --surface: rgba(56, 41, 34, 0.4);
+
+   --surface-secondary: rgba(50, 37, 31, 0.2);
+
+   --surface-tertiary: rgba(44, 32, 27, 0.2);
+
+   --surface-foreground: var(--foreground);
+
+   --surface-secondary-foreground: var(--foreground);
+
+   --surface-tertiary-foreground: var(--foreground);
+
+   /* ==========================
+       Default
+       ========================== */
+
+   --default: rgba(74, 55, 46, 0.4);
+
+   --default-foreground: var(--foreground);
+
+   /* ==========================
+       Input
+       ========================== */
+
+   --field-background: rgba(62, 46, 38, 0.2);
+
+   --field-border: rgba(120, 82, 58, 0.2);
+
+   --field-foreground: var(--foreground);
+
+   --field-placeholder: rgba(170, 145, 120, 0.2);
+
+   /* ==========================
+       Border
+       ========================== */
+
+   --border: rgb(108 76 56);
+
+   --separator: rgba(72, 52, 40, 0.2);
+
+   /* ==========================
+       Overlay
+       ========================== */
+
+   --overlay: rgb(38 28 23);
+
+   --overlay-foreground: var(--foreground);
+
+   /* ==========================
+       Status
+       ========================== */
+
+   --success: oklch(.76 .15 145);
+
+   --warning: oklch(.82 .16 78);
+
+   --danger: oklch(.67 .22 30);
+
+   --focus: var(--accent);
+
+   --scrollbar: rgb(120 84 60);
+}
+
+
+body {
+   background:
+      radial-gradient(circle, var(--bg_color) 1px, transparent 1px),
+      radial-gradient(circle, var(--color-warning) 1px, transparent 1px);
+   backdrop-filter: blur(2px);
+   background-size:
+      30px 30px,
+      50px 50px;
+
+   background-position:
+      0 0,
+      15px 15px;
+}
+
+
+@keyframes bgMove {
+
+   from {
+      background-position:
+         0 0,
+         15px 15px;
+   }
+
+   to {
+      background-position:
+         30px 30px,
+         65px 65px;
+   }
+}
+
+.button {
+   box-shadow: var(--shadow-sm);
+}

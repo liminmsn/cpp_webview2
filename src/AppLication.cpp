@@ -73,7 +73,7 @@ Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 	m_hwnd = CreateWindowExW(
 		WS_EX_NOREDIRECTIONBITMAP,
 		m_className,
-		L"本地Mysql 8.4.10",
+		L"本地Mysql",
 		style,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
@@ -107,9 +107,8 @@ Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 		ExitProcess(0);
 	}
 
-
 	ShowWindow(m_hwnd, nCmdShow);
-	UpdateWindow(m_hwnd);
+
 	EnableDarkModeWindow(m_hwnd, TRUE);
 	window = std::make_unique<Window>(m_hwnd);
 	taskbar = std::make_unique<Taskbar>(m_hwnd);

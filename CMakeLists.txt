@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.31)
 
 project(cpp_webview2
     VERSION 0.1.0
@@ -38,7 +38,7 @@ add_executable(cpp_webview2
 
 # 输出名称
 set_target_properties(cpp_webview2 PROPERTIES
-    OUTPUT_NAME "本地Mysql 8.4.10"
+    OUTPUT_NAME "LocalMysql"
 )
 
 # 链接库
@@ -56,9 +56,40 @@ target_link_libraries(cpp_webview2 PRIVATE
     shell32
 )
 
-
+# 编译完成后复制资源
 add_custom_command(TARGET cpp_webview2 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/resources"
         "$<TARGET_FILE_DIR:cpp_webview2>/resources"
+)
+
+# Debug / Release 宏
+target_compile_definitions(cpp_webview2 PRIVATE
+    $<$<CONFIG:Debug>:WEBVIEW_DEBUG>
+    $<$<CONFIG:Release>:WEBVIEW_RELEASE>
+)
+
+############################################################
+# Install
+############################################################
+
+include(GNUInstallDirs)
+
+# 安装 EXE
+install(TARGETS cpp_webview2
+    RUNTIME DESTINATION .
+)
+
+# 安装 Release 目录中的所有 DLL
+install(DIRECTORY
+    "$<TARGET_FILE_DIR:cpp_webview2>/"
+    DESTINATION .
+    FILES_MATCHING
+    PATTERN "*.dll"
+)
+
+# 安装 resources
+install(DIRECTORY
+    "${CMAKE_SOURCE_DIR}/resources/"
+    DESTINATION resources
 )
