@@ -152,8 +152,8 @@ bool MysqlManager::Install() {
 	if (!Initialize())
 		return false;
 
-	//if (!InstallService())
-	//	return false;
+	if (!InstallService())
+		return false;
 
 	installed_ = true;
 	return true;
@@ -216,7 +216,7 @@ bool MysqlManager::CreateConfig()
 			return false;
 
 		out << "[mysqld]\n";
-		out << "console\n";
+		//out << "console\n";
 		out << "basedir=" << mysqlPath_.generic_string() << "\n";
 		out << "datadir=" << dataPath_.generic_string() << "\n";
 		out << "port=3306\n";
@@ -452,14 +452,17 @@ bool MysqlManager::InstallService()
 	}
 
 	// mysqld启动命令
+	//std::wstring command =
+	//	L"\"" +
+	//	mysqld.wstring() +
+	//	L"\" "
+	//	L"--defaults-file=\"" +
+	//	configPath_.wstring() +
+	//	L"\" " +
+	//	SERVICE_NAME;
 	std::wstring command =
-		L"\"" +
-		mysqld.wstring() +
-		L"\" "
-		L"--defaults-file=\"" +
-		configPath_.wstring() +
-		L"\" " +
-		SERVICE_NAME;
+		L"\"" + mysqld.wstring() + L"\" "
+		L"--defaults-file=\"" + configPath_.wstring() + L"\"";
 
 	SC_HANDLE service = CreateServiceW(
 		scm,
@@ -611,8 +614,8 @@ bool MysqlManager::IsRunning() const
 	{
 		switch (status.dwCurrentState)
 		{
+		//case SERVICE_START_PENDING:
 		case SERVICE_RUNNING:
-		case SERVICE_START_PENDING:
 			result = true;
 			break;
 
@@ -632,7 +635,7 @@ bool MysqlManager::IsRunning() const
 bool MysqlManager::Start()
 {
 	// 1. 杀掉残留 mysqld.exe
-	KillProcessByName(L"mysqld.exe");
+	//KillProcessByName(L"mysqld.exe");
 
 	// 2. 验证 datadir 权限
 	const wchar_t* datadir = dataPath_.c_str();
