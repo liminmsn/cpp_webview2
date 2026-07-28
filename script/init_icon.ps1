@@ -13,7 +13,7 @@ if (!(Test-Path $OutputDir)) {
 magick `
     $Input `
     -trim +repage `
-    -resize 256x256 `
+    -resize 256 `
     -gravity center `
     -background none `
     -extent 256x256 `

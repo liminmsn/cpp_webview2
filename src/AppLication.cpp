@@ -71,8 +71,8 @@ Application::~Application()
 	UnregisterClassW(m_className, m_hInst);
 }
 
-constexpr int DESIGN_WIDTH = 1200;
-constexpr int DESIGN_HEIGHT = 800;
+constexpr int DESIGN_WIDTH = 800;
+constexpr int DESIGN_HEIGHT = 600;
 inline int ScaleByDpi(int value, UINT dpi)
 {
 	return MulDiv(value, dpi, 96);
@@ -100,7 +100,7 @@ Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 	m_hwnd = CreateWindowExW(
 		WS_EX_NOREDIRECTIONBITMAP,
 		m_className,
-		L"Webview2窗口程序",
+		L"本地RM",
 		style,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
@@ -120,7 +120,7 @@ Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 
 	ShowWindow(m_hwnd, nCmdShow);
 	UpdateWindow(m_hwnd);
-	//EnableDarkModeWindow(m_hwnd, TRUE);
+	EnableDarkModeWindow(m_hwnd, TRUE);
 	hkwebview = std::make_unique<HKWebview>(*this);
 	bridge = std::make_unique<Bridge>(*this);
 	window = std::make_unique<Window>(m_hwnd);
