@@ -2,9 +2,9 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
-@import "./theme/global.css";
 
 @custom-variant dark (&:is(.dark *));
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -94,7 +94,8 @@
 
   --sidebar-border: oklch(0.93 0.007 106.5);
 
-  --sidebar-ring: oklch(0.737 0.021 106.9)}
+  --sidebar-ring: oklch(0.737 0.021 106.9)
+}
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -115,6 +116,7 @@
     filter: invert(1) brightness(2);
   }
 }
+
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: 'Geist Variable', sans-serif;
@@ -194,8 +196,15 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;}
+    @apply border-border outline-ring/50;
+  }
+
   body {
-    @apply bg-background text-foreground;}
+    @apply bg-transparent text-foreground;
+  }
+
   html {
-    @apply font-sans;}}
+    @apply font-sans;
+    background: #00000000 !important;
+  }
+}
