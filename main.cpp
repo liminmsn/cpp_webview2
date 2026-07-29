@@ -1,13 +1,13 @@
 #define UNICODE
 #define _UNICODE
 #include <objbase.h>
-#include "src/head/Application.h"
+#include "src/head/AppLication.h"
 #include "resource.h"
 
 #include <shellscalingapi.h>
 #pragma comment(lib, "Shcore.lib")
 
-static std::unique_ptr<Application> app;
+static std::unique_ptr<AppLication> app;
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -24,7 +24,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     wc.hInstance = hInstance;
     wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
     wc.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_APP_ICON));
-    app = std::make_unique<Application>(wc, hInstance, nCmdShow);
+    app = std::make_unique<AppLication>(wc, hInstance, nCmdShow);
     int exitCode = app->RunMessageLoop();
 
     app.reset();

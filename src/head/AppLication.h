@@ -4,12 +4,13 @@
 #include "HKWebview.h"
 #include "Bridge.h"
 #include "Window.h"
+#include "DataSourceManager.h"
 
-class Application
+class AppLication
 {
 public:
-    explicit Application(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow);
-    ~Application();
+    explicit AppLication(WNDCLASSW &wc, HINSTANCE hInst, int nCmdShow);
+    ~AppLication();
     int RunMessageLoop();
     static LRESULT CALLBACK StaticWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
     WNDCLASSW m_wc;
@@ -18,6 +19,7 @@ public:
     std::unique_ptr<HKWebview> hkwebview;
     std::unique_ptr<Bridge> bridge;
     std::unique_ptr<Window> window;
+    std::unique_ptr<DataSourceManager> dataSourceManager;
 
 private:
     const wchar_t m_className[16] = L"HKWebView";

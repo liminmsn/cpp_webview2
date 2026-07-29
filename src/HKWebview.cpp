@@ -1,7 +1,7 @@
 #include "head/HKWebview.h"
-#include "head/Application.h"
+#include "head/AppLication.h"
 
-HKWebview::HKWebview(Application& app) : m_app(app)
+HKWebview::HKWebview(AppLication& app) : m_app(app)
 {
 
 	CreateCoreWebView2EnvironmentWithOptions(

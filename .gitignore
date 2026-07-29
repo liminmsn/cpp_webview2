@@ -4,3 +4,5 @@
 /.vs
 /resources/mysql-8.4.10-winx64.zip
 /resource.aps
+resources/zip/mysql-8.4.10-winx64.zip
+resources/zip/Redis-8.8.1-Windows-x64-cygwin.zip

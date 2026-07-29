@@ -3,15 +3,15 @@
 #include <WebView2.h>
 #include "../utils/JsonUtil.h"
 
-class Application;
+class AppLication;
 class Bridge
 {
 public:
-	explicit Bridge(Application& app);
+	explicit Bridge(AppLication& app);
 	void Init();
 
 private:
 	void OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceivedEventArgs* args);
 	void Send(const json& json);
-	Application& m_app;
+	AppLication& m_app;
 };

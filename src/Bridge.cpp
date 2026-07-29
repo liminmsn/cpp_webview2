@@ -2,7 +2,7 @@
 #include "head/AppLication.h"
 #include "utils/Encoding.h"
 
-Bridge::Bridge(Application& app) : m_app(app) {}
+Bridge::Bridge(AppLication& app) : m_app(app) {}
 
 void Bridge::Init()
 {
@@ -30,7 +30,7 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 	//printf("Received message: %s\n", json.c_str());
 
 	std::string id = j.value("id", "");
-	auto data = j["data"];
+	auto& data = j["data"];
 	std::string type = data.value("type", "");
 	// ========================
 	// 窗口方法
@@ -53,6 +53,9 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 				m_app.window->ToggleFullscreen();
 			}
 		}
+	}
+	else if (type == "DataSourceManager") {
+		m_app.dataSourceManager->OnMessage(data);
 	}
 	else
 	{

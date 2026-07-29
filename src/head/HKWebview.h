@@ -9,14 +9,14 @@ using Microsoft::WRL::Callback;
 using Microsoft::WRL::ComPtr;
 
 
-class Application;
+class AppLication;
 
 
 class HKWebview
 {
 public:
 
-    explicit HKWebview(Application& app);
+    explicit HKWebview(AppLication& app);
 
 
     void Resize();
@@ -36,5 +36,5 @@ private:
 
 private:
 
-    Application& m_app;
+    AppLication& m_app;
 };

@@ -1,8 +1,8 @@
 #define UNICODE
 #define _UNICODE
-#include "head/Application.h"
+#include "head/AppLication.h"
 
-int Application::RunMessageLoop()
+int AppLication::RunMessageLoop()
 {
 	MSG msg{};
 	while (GetMessageW(&msg, nullptr, 0, 0))
@@ -13,19 +13,19 @@ int Application::RunMessageLoop()
 	return static_cast<int>(msg.wParam);
 }
 
-LRESULT CALLBACK Application::StaticWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK AppLication::StaticWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	Application* pThis = nullptr;
+	AppLication* pThis = nullptr;
 
 	if (msg == WM_CREATE)
 	{
 		CREATESTRUCTW* pCreate = reinterpret_cast<CREATESTRUCTW*>(lParam);
-		pThis = reinterpret_cast<Application*>(pCreate->lpCreateParams);
+		pThis = reinterpret_cast<AppLication*>(pCreate->lpCreateParams);
 		SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 	}
 	else
 	{
-		pThis = reinterpret_cast<Application*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+		pThis = reinterpret_cast<AppLication*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
 	}
 
 	// ========== 你要的匿名函数，替代原来独立 WndProc ==========
@@ -64,7 +64,7 @@ LRESULT CALLBACK Application::StaticWndProc(HWND hwnd, UINT msg, WPARAM wParam, 
 	return MsgHandler(hwnd, msg, wParam, lParam);
 }
 
-Application::~Application()
+AppLication::~AppLication()
 {
 	if (m_hwnd)
 		DestroyWindow(m_hwnd);
@@ -78,10 +78,10 @@ inline int ScaleByDpi(int value, UINT dpi)
 	return MulDiv(value, dpi, 96);
 }
 
-Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc), m_hInst(hInst)
+AppLication::AppLication(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc), m_hInst(hInst)
 {
 	m_wc.lpszClassName = m_className;
-	m_wc.lpfnWndProc = Application::StaticWndProc;
+	m_wc.lpfnWndProc = AppLication::StaticWndProc;
 
 	if (!RegisterClassW(&m_wc))
 	{
@@ -121,7 +121,8 @@ Application::Application(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 	ShowWindow(m_hwnd, nCmdShow);
 	UpdateWindow(m_hwnd);
 	EnableDarkModeWindow(m_hwnd, TRUE);
+	window = std::make_unique<Window>(m_hwnd);
 	hkwebview = std::make_unique<HKWebview>(*this);
 	bridge = std::make_unique<Bridge>(*this);
-	window = std::make_unique<Window>(m_hwnd);
+	dataSourceManager = std::make_unique<DataSourceManager>(*this);
 }

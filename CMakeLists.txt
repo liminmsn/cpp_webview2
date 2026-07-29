@@ -19,7 +19,8 @@ add_compile_options("/utf-8")
 # vcpkg 包
 find_package(unofficial-webview2 CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-find_package(cpr CONFIG REQUIRED)
+find_package(libzip CONFIG REQUIRED)
+#find_package(cpr CONFIG REQUIRED)
 
 # 自动收集源码
 file(GLOB_RECURSE SRC_FILES
@@ -44,7 +45,8 @@ set_target_properties(cpp_webview2 PROPERTIES
 target_link_libraries(cpp_webview2 PRIVATE
     unofficial::webview2::webview2
     nlohmann_json::nlohmann_json
-    cpr::cpr
+    #cpr::cpr
+    libzip::zip
     dcomp
     dwmapi
     user32
