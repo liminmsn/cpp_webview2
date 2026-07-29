@@ -10,12 +10,12 @@ export function DataSourceManagerStartAll() {
     })
 }
 
-export function DataSourceManagerZip() {
+export function DataSourceManagerInitAll() {
     GlobalWebViewEbent.sendOnce({
         id: crypto.randomUUID(),
         data: {
             type: "DataSourceManager",
-            data: "init"
+            data: "InitAll"
         }
-    },)
+    })
 }

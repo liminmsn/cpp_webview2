@@ -1,3 +1,5 @@
+
+import { toast } from "sonner";
 export default class GlobalWebViewEbent {
     private static listenerArr: Map<string, <T>(data: T) => void> = new Map();
     /**只需要在入口函数调用一次 */
@@ -5,8 +7,8 @@ export default class GlobalWebViewEbent {
         console.log('初始化全局webview事件');
         window.chrome.webview.addEventListener("message", (event) => {
             const { data } = event;
-            console.log(event);
-
+            toast(JSON.stringify(data));
+            // console.log(event);
             if (data) {
                 const callBackFun = this.listenerArr.get(data.id);
                 if (callBackFun) {

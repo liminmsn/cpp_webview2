@@ -55,6 +55,13 @@ target_link_libraries(cpp_webview2 PRIVATE
     shell32
 )
 
+# 拷贝 resources 到输出目录
+add_custom_command(TARGET cpp_webview2 POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/resources
+        $<TARGET_FILE_DIR:cpp_webview2>/resources
+)
+
 
 # Debug / Release 宏
 target_compile_definitions(cpp_webview2 PRIVATE

@@ -5,17 +5,14 @@
 
 DataSourceManager::~DataSourceManager() = default;
 DataSourceManager::DataSourceManager(AppLication& app) :m_app(app) {
-	m_sources.emplace_back(std::make_unique<MysqlManager>());
+	m_sources.emplace_back(std::make_unique<MysqlManager>(m_app));
 	m_sources.emplace_back(std::make_unique<RedisManager>());
 };
 
 void DataSourceManager::OnMessage(json& data) {
-	if (data["init"] == "") {
-
+	if (data["data"] == "InitAll") {
+		InitAll();
 	}
-	//std::string s = JsonToString(data);
-	//std::wstring ws = Utf8ToWstring(s);
-	//OutputDebugStringW(ws.c_str());
 }
 
 void DataSourceManager::InitAll() {

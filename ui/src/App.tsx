@@ -4,19 +4,19 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { type LucideProps, Database, LayoutDashboardIcon } from "lucide-react";
-import { useState, type ForwardRefExoticComponent, type RefAttributes } from "react";
+import { useEffect, useState } from "react";
 import PageMysql from "./page/PageMysql";
 import PageRedis from "./page/PageRedis";
-import { Github, GithubFreeIcons, GithubIcon } from "@hugeicons/core-free-icons";
+import { GithubIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import sql from "@/assets/sql.png"
 import redis from "@/assets/redis.png"
+import { Toaster } from "./components/ui/sonner";
+import { DataSourceManagerInitAll } from "./event/DataSourceManager";
 
 type SidebarMenuItemType = {
   name: string;
@@ -27,19 +27,23 @@ type SidebarMenuItemType = {
 const projects: SidebarMenuItemType[] = [
   {
     name: "Mysql",
-    icon: () => <img srcSet={sql} className="h-6" />,
+    icon: () => <img srcSet={sql} className="h-6 min-w-6" />,
     page: PageMysql
   },
   {
     name: "Redis",
-    icon: () => <img srcSet={redis} className="h-6" />,
+    icon: () => <img srcSet={redis} className="h-6 min-w-6" />,
     page: PageRedis
   }
 ]
 export default function () {
   const [selectPage, setSelectPage] = useState(projects[0]);
+  useEffect(() => {
+    // DataSourceManagerInitAll()
+  }, [])
 
   return <div className="h-screen">
+    <Toaster />
     <SidebarProvider defaultOpen={false}>
       <div className="max-w-35">
         <Sidebar className="w-35" variant="sidebar" collapsible="icon">
