@@ -10,12 +10,9 @@ class DataSourceManager
 {
 public:
 	explicit DataSourceManager(AppLication& app);
-	~DataSourceManager();
-	void OnMessage(json &data);
-	void InitAll();
-	void StartAll();
-	void StopAll();
+	void OnMessage(json& data);
 private:
 	AppLication& m_app;
 	std::vector<std::unique_ptr<IDataSource>> m_sources;
+	void GetState();
 };

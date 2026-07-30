@@ -7,11 +7,7 @@ class MysqlManager : public IDataSource
 public:
 	MysqlManager(AppLication& app);
 	~MysqlManager() override;
-	bool Start() override;
-	bool Stop() override;
-	bool Init() override;
-	AppLication& m_app;
+	void Init() override;
 private:
-	std::string zipPath;
-	std::string outDir;
+	AppLication& m_app;
 };

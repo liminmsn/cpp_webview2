@@ -29,8 +29,11 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 	auto j = StringToJson(json);
 	//printf("Received message: %s\n", json.c_str());
 
-	std::string id = j.value("id", "");
+	//std::string id = j.value("id", "");
+	id = j.value("id", "");
 	auto& data = j["data"];
+
+
 	std::string type = data.value("type", "");
 	// ========================
 	// 窗口方法
@@ -41,12 +44,13 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 		if (action == "toggleFullscreen")
 		{
 			m_app.window->ToggleFullscreen();
-			nlohmann::json res;
-			res["id"] = id;
-			res["data"] = {
-				{"state", m_app.window->IsFullscreen()}
-			};
-			Send(res);
+			SendId({ "state", m_app.window->IsFullscreen() });
+			//nlohmann::json res;
+			//res["id"] = id;
+			//res["data"] = {
+			//	{"state", m_app.window->IsFullscreen()}
+			//};
+			//Send(res);
 		}
 		else if (action == "Reset") {
 			if (m_app.window->IsFullscreen()) {
@@ -66,6 +70,12 @@ void Bridge::OnWebMessage(ICoreWebView2* sender, ICoreWebView2WebMessageReceived
 	}
 }
 
+void Bridge::SendId(const json& data) {
+	json res;
+	res["id"] = id;
+	res["data"] = data;
+	Send(res);
+}
 void Bridge::Send(const json& json)
 {
 	// Post the JSON to the UI thread to ensure WebView2 COM calls happen on the

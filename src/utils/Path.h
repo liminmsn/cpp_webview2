@@ -1,6 +1,8 @@
 #include <Windows.h>
 #include <appmodel.h>
 #pragma comment(lib, "runtimeobject.lib")
+#include <iostream>
+#include <filesystem>
 
 inline std::wstring GetExeDir()
 {
@@ -28,4 +30,23 @@ inline std::wstring GetInstallPath()
         }
     }
     return GetExeDir();
+}
+
+inline bool isDirectoryEmpty(const std::string& path) {
+    namespace fs = std::filesystem;
+    fs::path dir(path);
+    // 如果不是目录，直接返回 false
+    if (!fs::is_directory(dir)) {
+        return false;
+    }
+    // 判断目录是否为空
+    return fs::directory_iterator(dir) == fs::directory_iterator();
+}
+
+// 返回目录存在且非空
+inline bool directoryExistsAndNotEmpty(const std::string& path) {
+    namespace fs = std::filesystem;
+    fs::path dir(path);
+    if (!fs::exists(dir) || !fs::is_directory(dir)) return false;
+    return fs::directory_iterator(dir) != fs::directory_iterator();
 }

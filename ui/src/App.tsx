@@ -16,7 +16,9 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import sql from "@/assets/sql.png"
 import redis from "@/assets/redis.png"
 import { Toaster } from "./components/ui/sonner";
-import { DataSourceManagerInitAll } from "./event/DataSourceManager";
+import { useDispatch } from "react-redux";
+import { DataSourceManager_GetState } from "./event/DataSourceManager";
+import { updateState } from "./store/features/serviceSlice";
 
 type SidebarMenuItemType = {
   name: string;
@@ -36,11 +38,15 @@ const projects: SidebarMenuItemType[] = [
     page: PageRedis
   }
 ]
+
+
 export default function () {
+  const dispatch = useDispatch()
   const [selectPage, setSelectPage] = useState(projects[0]);
+
   useEffect(() => {
-    // DataSourceManagerInitAll()
-  }, [])
+    DataSourceManager_GetState((state) => dispatch(updateState(state)))
+  }, [dispatch]);
 
   return <div className="h-screen">
     <Toaster />

@@ -1,15 +1,13 @@
 #pragma once
 #include "IDataSource.h"
 
+class AppLication;
 class RedisManager : public IDataSource
 {
 public:
-	RedisManager();
+	RedisManager(AppLication& app);
 	~RedisManager() override;
-	bool Start() override;
-	bool Stop() override;
-	bool Init() override;
+	void Init() override;
 private:
-	std::string zipPath;
-	std::string outDir;
+	AppLication& m_app;
 };

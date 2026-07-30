@@ -5,33 +5,6 @@
 #include "../head/AppLication.h"
 #include <thread>
 
-bool MysqlManager::Start() {
-	return false;
-}
-
-bool MysqlManager::Stop() {
-	return false;
-}
-
-bool MysqlManager::Init() {
-	std::thread(
-		[&]() {
-			if (ExtractZip(zipPath, outDir,
-				[&](const std::string& msg) {
-					json res;
-					res["data"] = msg;
-					m_app.bridge->Send(res);
-				}))
-			{
-				std::cout << "解压完成！" << std::endl;
-			}
-			else {
-				std::cout << "解压失败！" << std::endl;
-			}
-		}).detach();
-	return false;
-}
-
 MysqlManager::~MysqlManager() = default;
 MysqlManager::MysqlManager(AppLication& app) :m_app(app)
 {
@@ -43,4 +16,25 @@ MysqlManager::MysqlManager(AppLication& app) :m_app(app)
 
 	zipPath = mysqlZip.string();
 	outDir = (fs::path(basePath) / "mysql").string();
+}
+
+
+void MysqlManager::Init() {
+	if (!directoryExistsAndNotEmpty(outDir)) {
+		std::thread(
+			[&]() {
+				if (ExtractZip(zipPath, outDir,
+					[&](const std::string& msg) {
+						m_app.bridge->SendId({ {"type","Init"},{ "data",{{"msg",msg},{"end",false}}} });
+					}))
+				{
+					m_app.bridge->SendId({ {"type","Init"},{ "data",{{"msg","解压完成！"},{"end",true}}} });
+					//std::cout << "解压完成！" << std::endl;
+				}
+				else {
+					m_app.bridge->SendId({ {"type","Init"},{ "data",{{"msg","解压失败！"},{"end",false}}} });
+					//std::cout << "解压失败！" << std::endl;
+				}
+			}).detach();
+	}
 }
