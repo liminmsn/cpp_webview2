@@ -80,14 +80,16 @@ export default function () {
             </a>
 
             <Dialog>
-              <DialogTrigger render={
-                <div className="w-full flex items-end overflow-x-clip cursor-pointer">
-                  <span className="p-1 bg-orange-500 inline-block rounded-sm">
-                    <HugeiconsIcon icon={Information} size={20} />
-                  </span>
-                  <span className="inline-block pl-2">About</span>
-                </div>
-              } />
+              <DialogTrigger
+                nativeButton={false}
+                render={
+                  <div className="w-full flex items-end overflow-x-clip cursor-pointer">
+                    <span className="p-1 bg-orange-500 inline-block rounded-sm">
+                      <HugeiconsIcon icon={Information} size={20} />
+                    </span>
+                    <span className="inline-block pl-2">About</span>
+                  </div>
+                } />
               <DialogContent showCloseButton={false}>
                 <DialogHeader>
                   <DialogTitle>关于本程序开发灵感</DialogTitle>
@@ -109,9 +111,9 @@ export default function () {
                     </p>
                   ))}
                 </div>
-                <DialogFooter>
+                {/* <DialogFooter>
                   <DialogClose render={<Button variant="outline">Close</Button>} />
-                </DialogFooter>
+                </DialogFooter> */}
               </DialogContent>
             </Dialog>
           </SidebarFooter>

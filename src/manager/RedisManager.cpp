@@ -15,6 +15,10 @@ RedisManager::RedisManager(AppLication& app) :m_app(app) {
 
 	zipPath = redisZip.string();
 	outDir = (fs::path(basePath) / "redis").string();
+
+	if (directoryExistsAndNotEmpty(outDir)) {
+		outDir += "\\Redis-8.8.1-Windows-x64-cygwin";
+	}
 }
 
 void RedisManager::Init() {

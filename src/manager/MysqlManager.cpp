@@ -15,7 +15,12 @@ MysqlManager::MysqlManager(AppLication& app) :m_app(app)
 	fs::path mysqlZip = zipDir / "mysql-8.4.10-winx64.zip";
 
 	zipPath = mysqlZip.string();
+
 	outDir = (fs::path(basePath) / "mysql").string();
+
+	if (directoryExistsAndNotEmpty(outDir)) {
+		outDir += "\\mysql-8.4.10-winx64";
+	}
 }
 
 
