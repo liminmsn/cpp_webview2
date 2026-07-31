@@ -51,144 +51,104 @@
 }
 
 :root {
+  --radius: 0.75rem;
 
-  --radius: 0.45rem;
+  /* 浅色透明亚克力基底：极低饱和度暖米透底，兼容窗口透明 */
+  --background: oklch(0.99 0.006 65 / 45%);
+  --foreground: oklch(0.14 0.02 50);
 
+  /* 卡片/弹窗半透毛玻璃，亚克力分层感 */
+  --card: oklch(0.995 0.004 60 / 60%);
+  --card-foreground: oklch(0.14 0.02 50);
+  --popover: oklch(0.995 0.004 60 / 65%);
+  --popover-foreground: oklch(0.14 0.02 50);
 
-  /* =========================
-     MySQL Blue Light
-     ========================= */
+  /* 主色：香槟暖金，完全摒弃草莓红，火土相生助金命 */
+  --primary: oklch(0.73 0.155 72);
+  --primary-foreground: oklch(0.10 0.012 40);
 
-  --background: oklch(0.985 0.01 240);
-  --foreground: oklch(0.22 0.03 240);
+  /* 次级面板：浅透米灰，柔和分层 */
+  --secondary: oklch(0.95 0.016 62 / 50%);
+  --secondary-foreground: oklch(0.21 0.028 55);
 
+  --muted: oklch(0.96 0.014 60 / 40%);
+  --muted-foreground: oklch(0.51 0.038 48);
 
-  --card: oklch(0.995 0.008 240);
-  --card-foreground: oklch(0.22 0.03 240);
+  /* hover高亮：浅陶土金，透明状态下过渡自然 */
+  --accent: oklch(0.91 0.04 58 / 55%);
+  --accent-foreground: oklch(0.21 0.028 55);
 
+  /* 警示色：暗陶土，无艳红 */
+  --destructive: oklch(0.61 0.17 38);
 
-  --popover: oklch(0.995 0.008 240);
-  --popover-foreground: oklch(0.22 0.03 240);
+  /* 极淡半透边框，适配亚克力，厚重边框会割裂透明质感 */
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.69 0.145 72 / 70%);
 
+  /* 图表：暖金、陶棕、柔青绿，冷水色占比极低 */
+  --chart-1: oklch(0.73 0.155 72);
+  --chart-2: oklch(0.67 0.17 42);
+  --chart-3: oklch(0.71 0.135 162);
+  --chart-4: oklch(0.79 0.145 82);
+  --chart-5: oklch(0.71 0.165 255);
 
-
-  /* MySQL blue */
-  --primary: oklch(0.55 0.19 250);
-  --primary-foreground: oklch(0.98 0.01 250);
-
-
-
-  --secondary: oklch(0.94 0.02 240);
-  --secondary-foreground: oklch(0.3 0.04 240);
-
-
-
-  --muted: oklch(0.94 0.015 240);
-  --muted-foreground: oklch(0.55 0.04 240);
-
-
-
-  /* Redis red accent */
-  --accent: oklch(0.92 0.08 25);
-  --accent-foreground: oklch(0.25 0.04 25);
-
-
-
-  --destructive: oklch(0.6 0.23 25);
-
-
-
-  --border: oklch(0.88 0.02 240);
-  --input: oklch(0.88 0.02 240);
-
-
-
-  /* VS blue focus */
-  --ring: oklch(0.65 0.18 250);
-
-
-
-  /* charts */
-  --chart-1: oklch(0.55 0.19 250);
-  /* mysql */
-  --chart-2: oklch(0.65 0.23 25);
-  /* redis */
-  --chart-3: oklch(0.7 0.15 150);
-  --chart-4: oklch(0.8 0.16 90);
-  --chart-5: oklch(0.65 0.16 300);
-
-
-
-  /* sidebar */
-  --sidebar: oklch(0.96 0.015 240);
-  --sidebar-foreground: oklch(0.22 0.03 240);
-
-
-  --sidebar-primary:
-    oklch(0.55 0.19 250);
-
-  --sidebar-primary-foreground:
-    oklch(0.98 0.01 250);
-
-
-  --sidebar-accent:
-    oklch(0.92 0.08 25);
-
-  --sidebar-accent-foreground:
-    oklch(0.25 0.04 25);
-
-
-  --sidebar-border:
-    oklch(0.88 0.02 240);
-
-  --sidebar-ring:
-    oklch(0.65 0.18 250);
-
+  /* 侧边栏：低透米金亚克力侧边，不遮挡桌面 */
+  --sidebar: oklch(0.97 0.015 63 / 40%);
+  --sidebar-foreground: oklch(0.14 0.02 50);
+  --sidebar-primary: oklch(0.73 0.155 72);
+  --sidebar-primary-foreground: oklch(0.10 0.012 40);
+  --sidebar-accent: oklch(0.92 0.032 60 / 50%);
+  --sidebar-accent-foreground: oklch(0.21 0.028 55);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.69 0.145 72 / 70%);
 }
 
-
-
-
-
 .dark {
-  /* VS Code 深蓝背景 */
-  --background: oklch(0.16 0.02 245);
-  --foreground: oklch(0.94 0.02 240);
-  /* panel */
-  --card: oklch(0.21 0.025 245 / .9);
-  --card-foreground: oklch(0.94 0.02 240);
-  --popover: oklch(0.22 0.025 245);
-  --popover-foreground: oklch(0.94 0.02 240);
-  --primary: oklch(0.62 0.2 250);
-  --primary-foreground: oklch(0.98 0.01 250);
-  --secondary: oklch(0.27 0.025 245);
-  --secondary-foreground: oklch(0.9 0.03 240);
-  --muted: oklch(0.26 0.02 245);
-  --muted-foreground: oklch(0.68 0.04 240);
-  --accent: oklch(0.42 0.16 25);
-  --accent-foreground: oklch(0.98 0.02 25);
-  --destructive: oklch(0.65 0.23 25);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.65 0.18 250);
-  --chart-1: oklch(0.62 0.2 250);
-  --chart-2: oklch(0.68 0.23 25);
-  --chart-3: oklch(0.7 0.17 150);
-  --chart-4: oklch(0.82 0.16 90);
-  --chart-5: oklch(0.65 0.18 300);
-  /*
-      Sidebar
-  */
-  --sidebar: oklch(0.13 0.018 245 / .95);
-  --sidebar-foreground:
-    oklch(0.94 0.02 240);
-  --sidebar-primary: oklch(0.62 0.2 250);
-  --sidebar-primary-foreground:
-    oklch(0.98 0.01 250);
-  --sidebar-accent: oklch(0.38 0.13 25);
-  --sidebar-accent-foreground: oklch(0.98 0.02 25);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.65 0.18 250);
+  /* 深色亚克力半透暖咖基底，拒绝纯黑挡壁纸 */
+  --background: oklch(0.135 0.016 42 / 40%);
+  --foreground: oklch(0.96 0.018 60);
+
+  --card: oklch(0.18 0.022 38 / 62%);
+  --card-foreground: oklch(0.96 0.018 60);
+  --popover: oklch(0.18 0.022 38 / 68%);
+  --popover-foreground: oklch(0.96 0.018 60);
+
+  /* 深色香槟金主色，通透不暗沉 */
+  --primary: oklch(0.77 0.165 72);
+  --primary-foreground: oklch(0.09 0.01 35);
+
+  --secondary: oklch(0.24 0.026 36 / 48%);
+  --secondary-foreground: oklch(0.95 0.019 55);
+
+  --muted: oklch(0.24 0.026 36 / 38%);
+  --muted-foreground: oklch(0.64 0.038 48);
+
+  --accent: oklch(0.28 0.042 34 / 52%);
+  --accent-foreground: oklch(0.95 0.019 55);
+
+  --destructive: oklch(0.69 0.18 32);
+
+  /* 深色半透白分割线，适配深色亚克力 */
+  --border: oklch(1 0 0 / 11%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.77 0.165 72 / 75%);
+
+  --chart-1: oklch(0.77 0.165 72);
+  --chart-2: oklch(0.70 0.162 40);
+  --chart-3: oklch(0.74 0.128 158);
+  --chart-4: oklch(0.81 0.152 84);
+  --chart-5: oklch(0.71 0.172 252);
+
+  /* 深色侧边半透暖咖亚克力 */
+  --sidebar: oklch(0.16 0.02 40 / 38%);
+  --sidebar-foreground: oklch(0.96 0.018 60);
+  --sidebar-primary: oklch(0.77 0.165 72);
+  --sidebar-primary-foreground: oklch(0.09 0.01 35);
+  --sidebar-accent: oklch(0.26 0.033 36 / 46%);
+  --sidebar-accent-foreground: oklch(0.95 0.019 55);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.77 0.165 72 / 75%);
 }
 
 @layer base {

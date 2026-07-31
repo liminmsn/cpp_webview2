@@ -19,9 +19,7 @@ import { Toaster } from "./components/ui/sonner";
 import { useDispatch } from "react-redux";
 import { DataSourceManager_GetState } from "./event/DataSourceManager";
 import { updateState } from "./store/features/serviceSlice";
-import { Button } from "./components/ui/button";
-import { Info } from "lucide-react";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog";
 
 type SidebarMenuItemType = {
   name: string;
@@ -60,7 +58,12 @@ export default function () {
             <SidebarMenu>
               {projects.map((project) => {
                 return <SidebarMenuItem key={project.name}>
-                  <div className={`flex gap-x-2 rounded-sm overflow-x-clip p-1 cursor-pointer select-none ${project == selectPage && "bg-primary"}`} onClick={() => setSelectPage(project)}>
+                  <div className={`
+                  flex gap-x-2 rounded-sm overflow-x-clip p-1 cursor-pointer select-none 
+                  ${project == selectPage ?
+                      selectPage.name == "Mysql" ? "bg-chart-5" : "bg-chart-2" :
+                      ""}`}
+                    onClick={() => setSelectPage(project)}>
                     <project.icon />
                     <span>{project.name}</span>
                   </div>
@@ -73,7 +76,7 @@ export default function () {
           <SidebarFooter>
             <SidebarTrigger className="cursor-pointer" />
             <a className="w-full flex items-end overflow-x-clip" target="_blank" href="https://github.com/liminmsn/cpp_webview2/tree/LocalRM" >
-              <span className="p-1 bg-accent inline-block rounded-sm">
+              <span className="p-1 bg-background inline-block rounded-sm">
                 <HugeiconsIcon icon={GithubIcon} size={20} />
               </span>
               <span className="inline-block pl-2">GitHub</span>
@@ -84,7 +87,7 @@ export default function () {
                 nativeButton={false}
                 render={
                   <div className="w-full flex items-end overflow-x-clip cursor-pointer">
-                    <span className="p-1 bg-orange-500 inline-block rounded-sm">
+                    <span className="p-1 bg-chart-4 inline-block rounded-sm">
                       <HugeiconsIcon icon={Information} size={20} />
                     </span>
                     <span className="inline-block pl-2">About</span>
@@ -120,7 +123,7 @@ export default function () {
         </Sidebar>
       </div>
 
-      <main className="w-full h-screen">
+      <main className="w-full h-screen shadow-inner">
         {<selectPage.page />}
       </main>
     </SidebarProvider>

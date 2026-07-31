@@ -5,7 +5,6 @@
 #include "../head/AppLication.h"
 #include <thread>
 
-RedisManager::~RedisManager() = default;
 RedisManager::RedisManager(AppLication& app) :m_app(app) {
 	std::wstring wBasePath = GetInstallPath() + L"\\resources";
 	std::string basePath = WStringToUtf8(wBasePath);

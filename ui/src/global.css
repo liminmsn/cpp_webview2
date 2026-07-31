@@ -1,34 +1,35 @@
 @import "./index.css";
 
 :root {
-    --sidebar: rgba(0, 0, 0, 0.2);
 
+    /* --sidebar: rgba(0, 0, 0, 0); */
     ::selection {
         @apply bg-primary text-primary-foreground;
     }
 
-    ::-webkit-scrollbar{
+    ::-webkit-scrollbar {
         appearance: none;
-        width: 4px;
+        width: 9px;
         background: var(--color-background);
     }
+
     ::-webkit-scrollbar-thumb {
         background-color: var(--color-primary);
+        cursor: pointer;
     }
 }
 
-
-
+.react-flow,
+.react-flow__background {
+    @apply bg-background/0;
+}
 
 .react-flow__panel.react-flow__controls {
-    @apply m-2 overflow-hidden;
-    left: auto;
-    right: 0;
+    @apply m-2 overflow-hidden left-auto right-0 rounded-sm;
 }
 
 .react-flow__controls-button {
-    background: color-mix(in srgb, var(--color-background) 20%, transparent);
-    border-bottom: none;
+    @apply border-none bg-background;
 
     &:hover {
         @apply bg-primary;
@@ -37,12 +38,6 @@
 
 .react-flow__panel.react-flow__attribution {
     visibility: hidden;
-}
-
-.react-flow,
-.react-flow__background {
-    background-color: transparent;
-    /* background-color: rgba(0, 0, 0, 0.2); */
 }
 
 .react-flow__handle {

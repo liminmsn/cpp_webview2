@@ -5,7 +5,6 @@
 #include "../head/AppLication.h"
 #include <thread>
 
-MysqlManager::~MysqlManager() = default;
 MysqlManager::MysqlManager(AppLication& app) :m_app(app)
 {
 	std::wstring wBasePath = GetInstallPath() + L"\\resources";

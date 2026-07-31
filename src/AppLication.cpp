@@ -100,7 +100,7 @@ AppLication::AppLication(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 	m_hwnd = CreateWindowExW(
 		WS_EX_NOREDIRECTIONBITMAP,
 		m_className,
-		L"本地RM",
+		L"本地MysqlRedis",
 		style,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,

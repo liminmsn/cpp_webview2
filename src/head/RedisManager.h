@@ -6,7 +6,7 @@ class RedisManager : public IDataSource
 {
 public:
 	RedisManager(AppLication& app);
-	~RedisManager() override;
+	~RedisManager() override = default;
 	void Init() override;
 private:
 	AppLication& m_app;

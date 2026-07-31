@@ -2,7 +2,7 @@ import { ReactFlow, Background, Controls, useNodesState, Position, useEdgesState
 import { defaultEdgeOptions, nodeTypes } from '@/xyflow';
 import '@xyflow/react/dist/style.css';
 import { BaseNodeHeaderTitle } from '@/components/base-node';
-import { Edit, Info, Rocket } from 'lucide-react';
+import { Edit, Info, Rocket, Server } from 'lucide-react';
 import sql from "@/assets/sql.png";
 import { Badge } from '@/components/ui/badge';
 import { LabeledHandle } from '@/components/labeled-handle';
@@ -11,41 +11,48 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import type { RootState } from '@/store/store';
+import { useSelector } from 'react-redux';
 
 
 export default function () {
+    const services = useSelector((state: RootState) => state.services)
+
     const [edges, , onEdgesChange] = useEdgesState([
         {
-            id: "mysql_to_node",
+            id: crypto.randomUUID(),
             source: "mysql_0",
             target: "node_0"
         },
         {
-            id: "mysql_to_log",
+            id: crypto.randomUUID(),
             source: "mysql_0",
-            target: "mysql_out_log",
-            // type: "default"
+            target: "mysql_out_log"
         },
         {
-            id: "mysql_to_node1",
+            id: crypto.randomUUID(),
             source: "node_0",
-            target: "node_1",
-            type: "straight"
+            target: "node_1"
+        },
+        {
+            id: crypto.randomUUID(),
+            source: "node_1",
+            target: "node_2"
         }
     ]);
     const [nodes, , onNodesChange] = useNodesState([
         {
             type: "baseNodeFull",
             id: "mysql_0",
-            position: { x: 180, y: 0 },
+            position: { x: 60, y: 0 },
             data: {
                 header: <>
                     <img src={sql} className="w-6" />
                     <BaseNodeHeaderTitle>Mysql</BaseNodeHeaderTitle>
                 </>,
-                content: <div>
-                    <span>服务状态</span>
-                    <div className="text-center">
+                content: <div className='w-30 text-center'>
+                    <span>运行状态</span>
+                    <div>
                         <Badge variant="destructive">
                             OFF
                         </Badge>
@@ -89,11 +96,12 @@ export default function () {
                         My.init
                     </BaseNodeHeaderTitle>
                 </>,
-                content: <Textarea className='text-sm nodrag nopan' placeholder="Type your message here." defaultValue={
-                    `[mysqld]
+                content: (() => {
+                    return <Textarea className='nodrag nopan w-110 h-70' placeholder="Type your message here." defaultValue={
+                        `[mysqld]
 console
-basedir=C:/Users/limin/AppData/Local/LocalMysql/mysql
-datadir=C:/Users/limin/AppData/Local/LocalMysql/mysql/data
+basedir=${services.mysql.outDir}
+datadir=${services.mysql.outDir}\\data
 port=3306
 character-set-server=utf8mb4
 collation-server=utf8mb4_general_ci
@@ -105,26 +113,54 @@ sql_mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
 [client]
 port=3306
 default-character-set=utf8mb4`
-                } />
+                    } />
+                })()
             },
             type: "baseNodeFull",
         },
         {
             id: "node_1",
-            position: { x: 300, y: 400 },
+            position: { x: 300, y: 370 },
             data: {
                 header: <>
                     <BaseHandle type="target" position={Position.Top} />
+                    <BaseHandle type="source" position={Position.Right} />
+                    <Server className="size-4" />
+                    <BaseNodeHeaderTitle>
+                        服务
+                    </BaseNodeHeaderTitle>
+                </>,
+                content: <div className='nodrag nopan'>
+                    <div className="flex items-center space-x-2">
+                        <Label htmlFor="airplane-mode">ON|OFF:</Label>
+                        <Switch id="airplane-mode" />
+                    </div>
+                    <Button onClickCapture={() => {
+
+                    }}>测试</Button>
+                </div>
+            },
+            type: "baseNodeFull",
+        },
+        {
+            id: "node_2",
+            position: { x: 450, y: 370 },
+            data: {
+                header: <>
+                    <BaseHandle type="target" position={Position.Left} />
                     <Rocket className="size-4" />
                     <BaseNodeHeaderTitle>
                         运行
                     </BaseNodeHeaderTitle>
                 </>,
-                content: <div className='nodrag'>
+                content: <div className='nodrag nopan'>
                     <div className="flex items-center space-x-2">
                         <Label htmlFor="airplane-mode">ON|OFF:</Label>
                         <Switch id="airplane-mode" />
                     </div>
+                    <Button onClickCapture={() => {
+
+                    }}>测试</Button>
                 </div>
             },
             type: "baseNodeFull",

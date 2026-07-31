@@ -9,4 +9,7 @@ public:
 public:
 	std::string zipPath;
 	std::string outDir;
+	std::string GetOutDir() const{
+		return outDir;
+	}
 };

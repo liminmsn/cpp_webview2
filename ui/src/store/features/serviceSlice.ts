@@ -5,12 +5,13 @@ export interface ServiceStateType {
 }
 interface ServiceStateItemType {
   InitialState: boolean;
+  outDir: string;
 }
 
 
 const initialState: ServiceStateType = {
-  mysql: { InitialState: false },
-  redis: { InitialState: false }
+  mysql: { InitialState: false, outDir: '' },
+  redis: { InitialState: false, outDir: '' }
 }
 
 

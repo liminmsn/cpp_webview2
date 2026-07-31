@@ -27,3 +27,16 @@ export function DataSourceManager_Init(initKey: string) {
         }
     })
 }
+
+export function DataSourceManager_GetOutDir(key: "MYSQL" | "REDIS", call: (outDir: string) => void) {
+    GlobalWebViewEbent.send({
+        id: crypto.randomUUID(),
+        data: {
+            type: "DataSourceManager",
+            data: {
+                type: "GetOutDir",
+                key
+            }
+        }
+    }, call)
+}

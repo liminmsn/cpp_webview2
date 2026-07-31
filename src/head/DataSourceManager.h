@@ -13,6 +13,6 @@ public:
 	void OnMessage(json& data);
 private:
 	AppLication& m_app;
-	std::vector<std::unique_ptr<IDataSource>> m_sources;
+	std::unordered_map<std::string, std::unique_ptr<IDataSource>> m_sourcesMap;
 	void GetState();
 };
