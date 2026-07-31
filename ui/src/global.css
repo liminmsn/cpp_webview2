@@ -1,10 +1,24 @@
 @import "./index.css";
 
 :root {
+    --sidebar: rgba(0, 0, 0, 0.2);
+
     ::selection {
         @apply bg-primary text-primary-foreground;
     }
+
+    ::-webkit-scrollbar{
+        appearance: none;
+        width: 4px;
+        background: var(--color-background);
+    }
+    ::-webkit-scrollbar-thumb {
+        background-color: var(--color-primary);
+    }
 }
+
+
+
 
 .react-flow__panel.react-flow__controls {
     @apply m-2 overflow-hidden;
@@ -28,10 +42,8 @@
 .react-flow,
 .react-flow__background {
     background-color: transparent;
-    /* background-color: rgba(0, 0, 0, 0.1); */
-    backdrop-filter: blur(20px);
+    /* background-color: rgba(0, 0, 0, 0.2); */
 }
-
 
 .react-flow__handle {
     width: 9px;

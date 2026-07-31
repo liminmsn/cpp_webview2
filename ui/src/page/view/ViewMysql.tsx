@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 
 
 export default function () {
-    const [edges, setEdges, onEdgesChange] = useEdgesState([
+    const [edges, , onEdgesChange] = useEdgesState([
         {
             id: "mysql_to_node",
             source: "mysql_0",
@@ -72,7 +72,7 @@ export default function () {
                     </BaseNodeHeaderTitle>
                     <Button variant="destructive">清空日志</Button>
                 </>,
-                content: <div className='h-50 overflow-y-auto'>
+                content: <div className='h-50 overflow-y-auto nodrag nopan'>
                     <Textarea className='max-w-70 w-70 h-full' placeholder='这里是mysql服务输出的所有日志...' />
                 </div>
             }
@@ -89,7 +89,7 @@ export default function () {
                         My.init
                     </BaseNodeHeaderTitle>
                 </>,
-                content: <Textarea className='text-sm' placeholder="Type your message here." defaultValue={
+                content: <Textarea className='text-sm nodrag nopan' placeholder="Type your message here." defaultValue={
                     `[mysqld]
 console
 basedir=C:/Users/limin/AppData/Local/LocalMysql/mysql
@@ -120,7 +120,7 @@ default-character-set=utf8mb4`
                         运行
                     </BaseNodeHeaderTitle>
                 </>,
-                content: <div>
+                content: <div className='nodrag'>
                     <div className="flex items-center space-x-2">
                         <Label htmlFor="airplane-mode">ON|OFF:</Label>
                         <Switch id="airplane-mode" />
@@ -139,7 +139,7 @@ default-character-set=utf8mb4`
             defaultEdgeOptions={defaultEdgeOptions}
             onEdgesChange={onEdgesChange}
             onNodesChange={onNodesChange}
-            nodesDraggable={!false}
+            nodesDraggable={false}
             fitView
             fitViewOptions={{
                 padding: 1.2
