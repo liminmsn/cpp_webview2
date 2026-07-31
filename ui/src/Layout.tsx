@@ -52,7 +52,7 @@ export default function () {
     <Toaster />
     <SidebarProvider defaultOpen={false}>
       <div className="max-w-35">
-        <Sidebar className="w-35" variant="sidebar" collapsible="icon">
+        <Sidebar className="w-35" collapsible="icon">
           <SidebarHeader>
             <SidebarMenu>
               {projects.map((project) => {
@@ -79,7 +79,7 @@ export default function () {
         </Sidebar>
       </div>
 
-      <main className="w-full h-screen p-2">
+      <main className="w-full h-screen">
         {<selectPage.page />}
       </main>
     </SidebarProvider>

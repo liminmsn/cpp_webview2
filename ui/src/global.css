@@ -2,7 +2,41 @@
 
 :root {
     ::selection {
-        background: var(--primary);
-        color: var(--color-primary-foreground);
+        @apply bg-primary text-primary-foreground;
     }
+}
+
+.react-flow__panel.react-flow__controls {
+    @apply m-2 overflow-hidden;
+    left: auto;
+    right: 0;
+}
+
+.react-flow__controls-button {
+    background: color-mix(in srgb, var(--color-background) 20%, transparent);
+    border-bottom: none;
+
+    &:hover {
+        @apply bg-primary;
+    }
+}
+
+.react-flow__panel.react-flow__attribution {
+    visibility: hidden;
+}
+
+.react-flow,
+.react-flow__background {
+    background-color: transparent;
+    /* background-color: rgba(0, 0, 0, 0.1); */
+    backdrop-filter: blur(20px);
+}
+
+
+.react-flow__handle {
+    width: 9px;
+    height: 9px;
+    border: 1.2pt solid white;
+    border-radius: 50%;
+    background: var(--color-primary);
 }
