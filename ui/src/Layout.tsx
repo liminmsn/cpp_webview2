@@ -87,7 +87,7 @@ export default function () {
                 nativeButton={false}
                 render={
                   <div className="w-full flex items-end overflow-x-clip cursor-pointer">
-                    <span className="p-1 bg-chart-4 inline-block rounded-sm">
+                    <span className="p-1 bg-chart-2 inline-block rounded-sm">
                       <HugeiconsIcon icon={Information} size={20} />
                     </span>
                     <span className="inline-block pl-2">About</span>
