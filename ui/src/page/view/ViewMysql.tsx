@@ -1,5 +1,4 @@
-import { ReactFlow, Background, Controls, useNodesState, Position, useEdgesState } from '@xyflow/react';
-import { defaultEdgeOptions, nodeTypes } from '@/xyflow';
+import { useNodesState, Position, useEdgesState } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { BaseNodeHeaderTitle } from '@/components/base-node';
 import { Edit, Info, Rocket, Server } from 'lucide-react';
@@ -11,8 +10,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import type { RootState } from '@/store/store';
 import { useSelector } from 'react-redux';
+import { DataSourceManager_Injection } from '@/event/DataSourceManager';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
+import XyFlow from '@/components/XyFlow';
+import type { RootState } from '@/store/store';
+import type { BaseNodePropChildrenDataType } from '@/components/XyFlow/RMBaseNode';
 
 
 export default function () {
@@ -37,27 +41,30 @@ export default function () {
         {
             id: crypto.randomUUID(),
             source: "node_1",
-            target: "node_2"
+            target: "node_2",
+            type: "default"
         }
     ]);
     const [nodes, , onNodesChange] = useNodesState([
         {
             type: "baseNodeFull",
             id: "mysql_0",
-            position: { x: 60, y: 0 },
+            position: { x: 140, y: 0 },
             data: {
                 header: <>
                     <img src={sql} className="w-6" />
                     <BaseNodeHeaderTitle>Mysql</BaseNodeHeaderTitle>
                 </>,
-                content: <div className='w-30 text-center'>
-                    <span>运行状态</span>
-                    <div>
-                        <Badge variant="destructive">
-                            OFF
-                        </Badge>
+                ContentComponent: () => {
+                    return <div className='w-30 text-center'>
+                        <span>服务状态</span>
+                        <div>
+                            <Badge variant="destructive">
+                                未安装
+                            </Badge>
+                        </div>
                     </div>
-                </div>,
+                },
                 footer: <LabeledHandle
                     id="mysql_0_out"
                     type="source"
@@ -69,36 +76,53 @@ export default function () {
         {
             type: "baseNodeFull",
             id: "mysql_out_log",
-            position: { x: -20, y: 210 },
+            position: { x: -20, y: 200 },
             data: {
-                header: <>
-                    <BaseHandle type="target" position={Position.Top} />
-                    <Info className="size-4" />
-                    <BaseNodeHeaderTitle>
-                        输出日志
-                    </BaseNodeHeaderTitle>
-                    <Button variant="destructive">清空日志</Button>
-                </>,
-                content: <div className='h-50 overflow-y-auto nodrag nopan'>
-                    <Textarea className='max-w-70 w-70 h-full' placeholder='这里是mysql服务输出的所有日志...' />
-                </div>
+                targetData: {
+                    logLabel: ""
+                },
+                HeaderComponent: function ({ targetData }: BaseNodePropChildrenDataType) {
+                    if (targetData) {
+                        const [, setData] = targetData;
+                        return <>
+                            <BaseHandle type="target" position={Position.Top} />
+                            <Info className="size-4" />
+                            <BaseNodeHeaderTitle>
+                                输出日志
+                            </BaseNodeHeaderTitle>
+                            <Button className="nodrag nopan cursor-pointer" variant="ghost" onClick={() => setData({ logLabel: "" })}>清空日志</Button>
+                        </>
+                    }
+                },
+                ContentComponent: function ({ targetData }: BaseNodePropChildrenDataType) {
+                    const [data_log, setData] = targetData;
+
+                    const onMessage = ({ data: d }: WebView2Event) => {
+                        setData({ data_log, logLabel: JSON.stringify(d) });
+                    }
+                    useEffect(() => {
+                        window.chrome.webview.addEventListener("message", onMessage);
+                        return function () {
+                            window.chrome.webview.removeEventListener("message", onMessage);
+                        }
+                    }, [])
+                    return <div className='h-50 overflow-y-auto nodrag nopan'>
+                        <Textarea
+                            className='nodrag nopan max-w-70 w-70 h-full'
+                            placeholder="服务日志..."
+                            value={data_log?.logLabel}
+                            onChange={() => { }}
+                        />
+                    </div>
+                }
             }
         },
         {
             id: "node_0",
             position: { x: 300, y: 0 },
             data: {
-                header: <>
-                    <BaseHandle type="target" position={Position.Left} />
-                    <BaseHandle type="source" position={Position.Bottom} />
-                    <Edit className="size-4" />
-                    <BaseNodeHeaderTitle>
-                        My.init
-                    </BaseNodeHeaderTitle>
-                </>,
-                content: (() => {
-                    return <Textarea className='nodrag nopan w-110 h-70' placeholder="Type your message here." defaultValue={
-                        `[mysqld]
+                targetData: {
+                    configLabel: `[mysqld]
 console
 basedir=${services.mysql.outDir}
 datadir=${services.mysql.outDir}\\data
@@ -113,38 +137,67 @@ sql_mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
 [client]
 port=3306
 default-character-set=utf8mb4`
-                    } />
-                })()
+                },
+                header: <>
+                    <BaseHandle type="target" position={Position.Left} />
+                    <BaseHandle type="source" position={Position.Bottom} />
+                    <Edit className="size-4" />
+                    <BaseNodeHeaderTitle>
+                        My.init
+                    </BaseNodeHeaderTitle>
+                </>,
+                ContentComponent: function ({ targetData }: BaseNodePropChildrenDataType) {
+                    if (targetData) {
+                        const [data, setData] = targetData;
+                        return <>
+                            <Textarea
+                                className='nodrag nopan w-110 h-70'
+                                placeholder="my.ini配置"
+                                value={data?.configLabel}
+                                onChange={({ target }) => {
+                                    const newValue = target.value;
+                                    setData({
+                                        ...data,
+                                        configLabel: newValue,
+                                    });
+                                }}
+                            />
+                        </>
+                    }
+                }
             },
             type: "baseNodeFull",
         },
         {
             id: "node_1",
-            position: { x: 300, y: 370 },
+            position: { x: 300, y: 375 },
             data: {
                 header: <>
                     <BaseHandle type="target" position={Position.Top} />
                     <BaseHandle type="source" position={Position.Right} />
                     <Server className="size-4" />
                     <BaseNodeHeaderTitle>
-                        服务
+                        服务管理
                     </BaseNodeHeaderTitle>
                 </>,
-                content: <div className='nodrag nopan'>
-                    <div className="flex items-center space-x-2">
-                        <Label htmlFor="airplane-mode">ON|OFF:</Label>
-                        <Switch id="airplane-mode" />
-                    </div>
-                    <Button onClickCapture={() => {
-
-                    }}>测试</Button>
-                </div>
+                ContentComponent: function ({ sourceData }: BaseNodePropChildrenDataType) {
+                    if (sourceData) {
+                        const [data] = sourceData;
+                        return <div className='nodrag nopan'>
+                            <Button onClickCapture={() => {
+                                DataSourceManager_Injection("MYSQL",
+                                    { key: "CreateConfig", val: data.configLabel },
+                                    (data) => toast(data))
+                            }}>安装服务</Button>
+                        </div>
+                    }
+                }
             },
             type: "baseNodeFull",
         },
         {
             id: "node_2",
-            position: { x: 450, y: 370 },
+            position: { x: 430, y: 375 },
             data: {
                 header: <>
                     <BaseHandle type="target" position={Position.Left} />
@@ -158,34 +211,16 @@ default-character-set=utf8mb4`
                         <Label htmlFor="airplane-mode">ON|OFF:</Label>
                         <Switch id="airplane-mode" />
                     </div>
-                    <Button onClickCapture={() => {
-
-                    }}>测试</Button>
                 </div>
             },
             type: "baseNodeFull",
         }
     ]);
 
-    return <div className='h-full w-full'>
-        <ReactFlow
-            nodes={nodes}
-            nodeTypes={nodeTypes}
-            edges={edges}
-            defaultEdgeOptions={defaultEdgeOptions}
-            onEdgesChange={onEdgesChange}
-            onNodesChange={onNodesChange}
-            nodesDraggable={false}
-            fitView
-            fitViewOptions={{
-                padding: 1.2
-            }}
-        >
-            <Background />
-            <Controls
-                showZoom={false}
-                showInteractive={false}
-            />
-        </ReactFlow>
-    </div>
+    return <XyFlow
+        nodes={nodes}
+        edges={edges}
+        onEdgesChange={onEdgesChange}
+        onNodesChange={onNodesChange}
+    />
 }

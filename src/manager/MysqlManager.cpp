@@ -2,6 +2,7 @@
 #include "../utils/Encoding.h"
 #include "../utils/Path.h"
 #include "../utils/Zip.h"
+#include "../utils/File.h"
 #include "../head/AppLication.h"
 #include <thread>
 
@@ -22,7 +23,6 @@ MysqlManager::MysqlManager(AppLication& app) :m_app(app)
 	}
 }
 
-
 void MysqlManager::Init() {
 	if (!directoryExistsAndNotEmpty(outDir)) {
 		std::thread(
@@ -41,4 +41,20 @@ void MysqlManager::Init() {
 				}
 			}).detach();
 	}
+}
+
+void MysqlManager::OnMessage(json& data) {
+	std::cout << data << std::endl;
+	if (data["key"] == "CreateConfig")
+	{
+		std::string& ConfigLabel = data["val"].get<std::string>();
+		if (WriteFile(outDir + "\\my.ini", ConfigLabel)) {
+			m_app.bridge->SendId("写入配置成功！");
+		}
+		else
+		{
+			m_app.bridge->SendId("写入配置失败！");
+		}
+	}
+
 }

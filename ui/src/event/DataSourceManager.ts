@@ -40,3 +40,15 @@ export function DataSourceManager_GetOutDir(key: "MYSQL" | "REDIS", call: (outDi
         }
     }, call)
 }
+export function DataSourceManager_Injection(key: "MYSQL" | "REDIS", data: any, call: (data: string) => void) {
+    GlobalWebViewEbent.send({
+        id: crypto.randomUUID(),
+        data: {
+            type: "DataSourceManager",
+            data: {
+                type: "MYSQL",
+                data,
+            }
+        }
+    }, call)
+}

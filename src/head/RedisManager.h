@@ -8,6 +8,7 @@ public:
 	RedisManager(AppLication& app);
 	~RedisManager() override = default;
 	void Init() override;
+	void OnMessage(json& data) override;
 private:
 	AppLication& m_app;
 };

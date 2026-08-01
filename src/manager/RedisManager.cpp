@@ -37,3 +37,6 @@ void RedisManager::Init() {
 			}).detach();
 	}
 }
+
+void RedisManager::OnMessage(json& data) {
+}
