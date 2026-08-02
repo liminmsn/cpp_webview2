@@ -11,7 +11,7 @@ import type { BaseNodePropChildrenDataType } from '@/components/XyFlow/RMBaseNod
 
 
 export default function () {
-    const services = useSelector((state: RootState) => state.services)
+    useSelector((state: RootState) => state.services)
 
     const [edges, , onEdgesChange] = useEdgesState([
         {
@@ -31,7 +31,7 @@ export default function () {
                     <img src={redis} className="w-6" />
                     <BaseNodeHeaderTitle>Mysql</BaseNodeHeaderTitle>
                 </>,
-                ContentComponent: function ({ targetData }: BaseNodePropChildrenDataType) {
+                ContentComponent: function () {
                     return <div className='w-30 text-center'>
                         <span>服务状态</span>
                         <div>

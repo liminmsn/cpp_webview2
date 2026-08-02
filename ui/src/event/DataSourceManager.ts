@@ -67,14 +67,32 @@ export function DataSourceManager_MYSQL_Initd(call: (bool: any) => void) {
     }, call)
 }
 
-export function DataSourceManager_MYSQL_Run(key: "Run" | "Stop", call: (bool: any) => void) {
+export function DataSourceManager_MYSQL_Run(key: "Run" | "Stop", args?: string, call?: (state: any) => void) {
     GlobalWebViewEbent.send({
         id: crypto.randomUUID(),
         data: {
             type: "DataSourceManager",
             data: {
                 type: "MYSQL",
-                data: { key }
+                data: {
+                    key,
+                    mysqladminArgs: args
+                }
+            }
+        }
+    }, call || function () { });
+}
+
+export function DataSourceManager_MYSQL_IsRun(call: (bool: any) => void) {
+    GlobalWebViewEbent.send({
+        id: crypto.randomUUID(),
+        data: {
+            type: "DataSourceManager",
+            data: {
+                type: "MYSQL",
+                data: {
+                    key: "IsRun"
+                }
             }
         }
     }, call)

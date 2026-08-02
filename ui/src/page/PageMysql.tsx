@@ -7,8 +7,9 @@ import { updateState } from "@/store/features/serviceSlice";
 import { useEffect } from "react";
 
 export default function () {
-    const services = useSelector((state: RootState) => state.services)
     const dispatch = useDispatch()
+    const services = useSelector((state: RootState) => state.services)
+
     useEffect(() => {
         DataSourceManager_GetState((state) => dispatch(updateState(state)))
     }, [dispatch]);

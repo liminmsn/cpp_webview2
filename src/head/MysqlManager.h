@@ -11,7 +11,8 @@ public:
 	void OnMessage(json& data) override;
 public:
 	void Send(std::string msg);
+	bool IsMySQLRunning(int port, std::string* outInfo, int connectTimeoutMs);
+	bool StopMysqldUsingMysqladmin(const std::string& binDir, const std::string& mysqladminArgs, int port, int waitMs);
 private:
-	PROCESS_INFORMATION* outPi = nullptr;
 	AppLication& m_app;
 };

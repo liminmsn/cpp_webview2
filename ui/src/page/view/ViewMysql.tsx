@@ -1,26 +1,37 @@
-import { useNodesState, Position, useEdgesState } from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
+import { DataSourceManager_Injection, DataSourceManager_MYSQL_Initd, DataSourceManager_MYSQL_IsRun, DataSourceManager_MYSQL_Run } from '@/event/DataSourceManager';
 import { BaseNodeHeaderTitle } from '@/components/base-node';
-import { Edit, FileSliders, Info, Rocket } from 'lucide-react';
-import sql from "@/assets/sql.png";
-import { Badge } from '@/components/ui/badge';
 import { LabeledHandle } from '@/components/labeled-handle';
 import { BaseHandle } from '@/components/base-handle';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { useDispatch, useSelector } from 'react-redux';
-import { DataSourceManager_Injection, DataSourceManager_MYSQL_Initd, DataSourceManager_MYSQL_Run } from '@/event/DataSourceManager';
-import { useEffect, useState } from 'react';
-import XyFlow from '@/components/XyFlow';
-import type { RootState } from '@/store/store';
-import type { BaseNodePropChildrenDataType } from '@/components/XyFlow/RMBaseNode';
-import { updateCurrentState } from '@/store/features/currentSlice';
-import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
+import XyFlow from '@/components/XyFlow';
+import type { BaseNodePropChildrenDataType } from '@/components/XyFlow/RMBaseNode';
+import type { RootState } from '@/store/store';
+import { updateCurrentState } from '@/store/features/currentSlice';
+import { Edit, FileSliders, Info, Rocket } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNodesState, Position, useEdgesState } from '@xyflow/react';
+import { useEffect, useState } from 'react';
+import sql from "@/assets/sql.png";
+import '@xyflow/react/dist/style.css';
+import { toast } from 'sonner';
 
 
 export default function () {
     const services = useSelector((state: RootState) => state.services)
+
+
+    const dispatch = useDispatch();
+    const current = useSelector((state: RootState) => state.current)
+    useEffect(() => {
+        DataSourceManager_MYSQL_IsRun((bool) => {
+            dispatch(updateCurrentState({
+                ...current,
+                ismysqlRun: bool
+            }));
+        })
+    }, []);
 
     const [edges, , onEdgesChange] = useEdgesState([
         {
@@ -56,13 +67,12 @@ export default function () {
                     <BaseNodeHeaderTitle>MYSQL</BaseNodeHeaderTitle>
                 </>,
                 ContentComponent: function () {
-
+                    const current = useSelector((state: RootState) => state.current)
+                    useEffect(() => { }, [current])
                     return <div className='w-30 text-center'>
                         <span>服务状态</span>
-                        <div>
-                            <Badge variant="destructive">
-                                未安装
-                            </Badge>
+                        <div className={`p-2 rounded-sm inline-block mt-1 ${current.ismysqlRun ? "bg-chart-3" : "bg-chart-1"}`}>
+                            <Label>{current.ismysqlRun ? "运行中" : "未启动"}</Label>
                         </div>
                     </div>
                 },
@@ -77,11 +87,13 @@ export default function () {
         {
             type: "baseNodeFull",
             id: "mysql_out_log",
-            position: { x: -180, y: 200 },
+            position: { x: -100, y: 200 },
             data: {
-                HeaderComponent: function () {
-                    const dispatch = useDispatch()
-                    const current = useSelector((state: RootState) => state.current)
+                targetData: {
+                    log: localStorage.getItem("mysql_out_log") || ""
+                },
+                HeaderComponent: function ({ targetData }: BaseNodePropChildrenDataType) {
+                    const [data, setData] = targetData;
                     return <>
                         <BaseHandle type="target" position={Position.Top} />
                         <Info className="size-5" />
@@ -89,20 +101,21 @@ export default function () {
                             日志
                         </BaseNodeHeaderTitle>
                         <Button className="nodrag nopan cursor-pointer" variant="destructive" onClick={() => {
-                            dispatch(updateCurrentState({ ...current, mysql: { log: "" } }))
+                            setData({ ...data, log: "" })
+                            localStorage.setItem("mysql_out_log", "")
                         }}>清空日志</Button>
                     </>
                 },
-                ContentComponent: function () {
-                    const dispatch = useDispatch()
-                    const current = useSelector((state: RootState) => state.current)
+                ContentComponent: function ({ targetData }: BaseNodePropChildrenDataType) {
+                    const [data, setData] = targetData;
 
                     useEffect(() => {
                         const onMessage = ({ data: d }: WebView2Event) => {
                             if (d && d.data.type == "MysqlLog") {
                                 const msg = d.data.msg;
-                                console.log(msg);
-                                dispatch(updateCurrentState({ ...current, mysql: { log: current.mysql.log + `${msg}\n` } }));
+                                const log = data.log += `${msg}\n`;
+                                setData({ ...data, log: log });
+                                localStorage.setItem("mysql_out_log", log);
                             }
                         }
 
@@ -110,11 +123,11 @@ export default function () {
                         return function () {
                             window.chrome.webview.removeEventListener("message", onMessage);
                         }
-                    }, [current, dispatch])
+                    }, [data, setData])
                     return <Textarea
-                        className='nodrag nopan nowheel w-110 min-h-50 text-[10px]!'
+                        className='nodrag nopan nowheel w-90 min-h-50 text-[10px]!'
                         placeholder="服务日志..."
-                        value={current.mysql.log}
+                        value={data.log}
                         onChange={() => { }}
                     />
                 }
@@ -224,14 +237,61 @@ default-character-set=utf8mb4`
                     </BaseNodeHeaderTitle>
                 </>,
                 ContentComponent: function () {
+                    const dispatch = useDispatch();
+                    const current = useSelector((state: RootState) => state.current)
+                    const [disabled, setDisabled] = useState(false);
+                    useEffect(() => { }, [current, dispatch]);
+
+                    function onToggle(key: "Run" | "Stop", mysqladminArgs: string) {
+                        setDisabled(true);
+                        DataSourceManager_MYSQL_Run(key, mysqladminArgs, () => {
+                            setTimeout(() => {
+                                DataSourceManager_MYSQL_IsRun((bool) => {
+                                    setDisabled(false)
+                                    dispatch(updateCurrentState({
+                                        ...current,
+                                        ismysqlRun: bool
+                                    }));
+                                    toast(`服务已经${bool ? "启动" : "停止"}`, { position: "top-right" });
+                                });
+                            }, 100);
+                        });
+                    }
+
+                    function useForm(formData: FormData) {
+                        const user = formData.get("user") as any;
+                        const password = formData.get("password") as any;
+
+                        const mysqladminArgs = (() => {
+                            if (password != "") {
+                                return `--password=${password} -u ${user}`;
+                            }
+                            return `-u ${user}`;
+                        })();
+                        onToggle("Stop", mysqladminArgs);
+                    }
                     return < div className='nodrag nopan' >
-                        <Button onClickCapture={() => {
-                            DataSourceManager_MYSQL_Run("Run", (bol) => {
-                                toast(bol)
-                            });
-                        }}>
-                            启动服务
-                        </Button>
+                        {
+                            current.ismysqlRun ?
+                                <form action={useForm}>
+                                    <div className='flex flex-col gap-y-1.5'>
+                                        <input
+                                            className='outline-none border-chart-1/25 border-2 pl-1'
+                                            placeholder='用户名(默认root无密码)'
+                                            required
+                                            name="user"
+                                            type='text' />
+                                        <input
+                                            className='outline-none border-chart-1/25 border-2 pl-1'
+                                            placeholder='密码(可选)'
+                                            name="password"
+                                            type='password' />
+                                        <Button disabled={disabled} type='submit' variant="destructive">终止服务</Button>
+                                    </div>
+                                </form> :
+                                <Button disabled={disabled} onClickCapture={() => onToggle("Run", "")} > 启动服务</Button>
+                        }
+
                     </div >
                 }
             },
