@@ -1,12 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { DataSourceManager_GetState, DataSourceManager_Init } from "@/event/DataSourceManager";
 import { updateState } from "@/store/features/serviceSlice";
+import { PackageOpen } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 
 export default function ({ InitKey }: { InitKey: "InitMysql" | "InitRedis" }) {
     const dispatch = useDispatch();
-    const [msg, setMsg] = useState(`ps:解压程序内置的${InitKey.replaceAll("Init", "")}压缩包【仅1次】`);
+    const [msg, setMsg] = useState(`解压程序内置的${InitKey.replaceAll("Init", "")}压缩包【仅1次】`);
+
+    const [disabled, setDisabled] = useState(false);
 
     useEffect(() => {
         function onMessage({ data }: WebView2Event) {
@@ -28,6 +31,12 @@ export default function ({ InitKey }: { InitKey: "InitMysql" | "InitRedis" }) {
 
     return <div className="h-full flex flex-col items-center justify-center">
         <div className="text-xs text-accent mb-1 max-w-5/10">{msg}</div>
-        <Button onClick={() => DataSourceManager_Init(InitKey)}>解压包</Button>
+        <Button disabled={disabled} onClick={() => {
+            DataSourceManager_Init(InitKey)
+            setDisabled(true)
+        }}>
+            初始化
+            <PackageOpen />
+        </Button>
     </div>
 }

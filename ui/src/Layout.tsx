@@ -7,18 +7,15 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { useEffect, useState } from "react";
+} from "@/components/ui/sidebar";
+import { useState } from "react";
 import PageMysql from "./page/PageMysql";
 import PageRedis from "./page/PageRedis";
 import { GithubIcon, Information } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import sql from "@/assets/sql.png"
-import redis from "@/assets/redis.png"
+import sql from "@/assets/sql.png";
+import redis from "@/assets/redis.png";
 import { Toaster } from "./components/ui/sonner";
-import { useDispatch } from "react-redux";
-import { DataSourceManager_GetState } from "./event/DataSourceManager";
-import { updateState } from "./store/features/serviceSlice";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog";
 
 type SidebarMenuItemType = {
@@ -42,13 +39,8 @@ const projects: SidebarMenuItemType[] = [
 
 
 export default function () {
-  const dispatch = useDispatch()
+
   const [selectPage, setSelectPage] = useState(projects[0]);
-
-  useEffect(() => {
-    DataSourceManager_GetState((state) => dispatch(updateState(state)))
-  }, [dispatch]);
-
   return <div className="h-screen">
     <Toaster />
     <SidebarProvider defaultOpen={false}>

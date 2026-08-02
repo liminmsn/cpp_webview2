@@ -1,7 +1,7 @@
 import { useNodesState, Position, useEdgesState } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { BaseNodeHeaderTitle } from '@/components/base-node';
-import { Edit, Info, Rocket, Server } from 'lucide-react';
+import { Edit, FileSliders, Info, Rocket } from 'lucide-react';
 import sql from "@/assets/sql.png";
 import { Badge } from '@/components/ui/badge';
 import { LabeledHandle } from '@/components/labeled-handle';
@@ -9,12 +9,14 @@ import { BaseHandle } from '@/components/base-handle';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useDispatch, useSelector } from 'react-redux';
-import { DataSourceManager_Injection, DataSourceManager_MYSQL_Initd } from '@/event/DataSourceManager';
+import { DataSourceManager_Injection, DataSourceManager_MYSQL_Initd, DataSourceManager_MYSQL_Run } from '@/event/DataSourceManager';
 import { useEffect, useState } from 'react';
 import XyFlow from '@/components/XyFlow';
 import type { RootState } from '@/store/store';
 import type { BaseNodePropChildrenDataType } from '@/components/XyFlow/RMBaseNode';
 import { updateCurrentState } from '@/store/features/currentSlice';
+import { toast } from 'sonner';
+import { Label } from '@/components/ui/label';
 
 
 export default function () {
@@ -51,7 +53,7 @@ export default function () {
             data: {
                 header: <>
                     <img src={sql} className="w-6" />
-                    <BaseNodeHeaderTitle>Mysql</BaseNodeHeaderTitle>
+                    <BaseNodeHeaderTitle>MYSQL</BaseNodeHeaderTitle>
                 </>,
                 ContentComponent: function () {
 
@@ -75,14 +77,14 @@ export default function () {
         {
             type: "baseNodeFull",
             id: "mysql_out_log",
-            position: { x: -140, y: 200 },
+            position: { x: -180, y: 200 },
             data: {
                 HeaderComponent: function () {
                     const dispatch = useDispatch()
                     const current = useSelector((state: RootState) => state.current)
                     return <>
                         <BaseHandle type="target" position={Position.Top} />
-                        <Info className="size-4" />
+                        <Info className="size-5" />
                         <BaseNodeHeaderTitle>
                             日志
                         </BaseNodeHeaderTitle>
@@ -99,8 +101,8 @@ export default function () {
                         const onMessage = ({ data: d }: WebView2Event) => {
                             if (d && d.data.type == "MysqlLog") {
                                 const msg = d.data.msg;
-                                current.mysql.log = current.mysql.log += `${msg}\n`;
-                                dispatch(updateCurrentState(current));
+                                console.log(msg);
+                                dispatch(updateCurrentState({ ...current, mysql: { log: current.mysql.log + `${msg}\n` } }));
                             }
                         }
 
@@ -109,14 +111,12 @@ export default function () {
                             window.chrome.webview.removeEventListener("message", onMessage);
                         }
                     }, [current, dispatch])
-                    return <div className='h-80 overflow-y-auto nodrag nopan'>
-                        <Textarea
-                            className='nodrag nopan nowheel w-100 h-full text-[10px]!'
-                            placeholder="服务日志..."
-                            value={current.mysql.log}
-                            onChange={() => { }}
-                        />
-                    </div>
+                    return <Textarea
+                        className='nodrag nopan nowheel w-110 min-h-50 text-[10px]!'
+                        placeholder="服务日志..."
+                        value={current.mysql.log}
+                        onChange={() => { }}
+                    />
                 }
             }
         },
@@ -144,7 +144,7 @@ default-character-set=utf8mb4`
                 header: <>
                     <BaseHandle type="target" position={Position.Left} />
                     <BaseHandle type="source" position={Position.Bottom} />
-                    <Edit className="size-4" />
+                    <Edit className="size-5" />
                     <BaseNodeHeaderTitle>
                         My.init
                     </BaseNodeHeaderTitle>
@@ -173,14 +173,14 @@ default-character-set=utf8mb4`
         },
         {
             id: "node_1",
-            position: { x: 300, y: 375 },
+            position: { x: 300, y: 380 },
             data: {
                 header: <>
                     <BaseHandle type="target" position={Position.Top} />
                     <BaseHandle type="source" position={Position.Right} />
-                    <Server className="size-4" />
+                    <FileSliders className="size-5" />
                     <BaseNodeHeaderTitle>
-                        服务管理
+                        配置管理
                     </BaseNodeHeaderTitle>
                 </>,
                 ContentComponent: function ({ sourceData }: BaseNodePropChildrenDataType) {
@@ -193,12 +193,8 @@ default-character-set=utf8mb4`
                     }, [])
 
                     if (initd) {
-                        return <div>
-                            <div>
-                                <Badge variant="secondary" className="bg-chart-3">
-                                    配置完成
-                                </Badge>
-                            </div>
+                        return <div className='bg-chart-3/40 p-2 rounded-sm'>
+                            <Label>已写入my.ini</Label>
                         </div>
                     }
 
@@ -210,7 +206,7 @@ default-character-set=utf8mb4`
                                     setDisabled(false);
                                 }, 1000);
                             })
-                        }}>初始化</Button>
+                        }}>写入my.ini</Button>
                     </div>
                 }
             },
@@ -218,28 +214,24 @@ default-character-set=utf8mb4`
         },
         {
             id: "node_2",
-            position: { x: 430, y: 375 },
+            position: { x: 300, y: 480 },
             data: {
                 header: <>
                     <BaseHandle type="target" position={Position.Left} />
-                    <Rocket className="size-4" />
+                    <Rocket className="size-5" />
                     <BaseNodeHeaderTitle>
                         运行
                     </BaseNodeHeaderTitle>
                 </>,
                 ContentComponent: function () {
                     return < div className='nodrag nopan' >
-                        {/* <div className='flex gap-x-1.5 items-center mb-0.5'>
-                            <Label htmlFor="airplane-mode">状态:</Label>
-                            {
-                                state ?
-                                    <Badge variant="secondary" className="bg-chart-3">ON</Badge> :
-                                    <Badge variant="secondary" className="bg-chart-2">OFF</Badge>
-                            }
-                        </div>
-                        <Switch id="airplane-mode" onCheckedChange={(checked) => {
-                            DataSourceManager_MYSQL_Run(checked ? "Run" : "Stop", setState);
-                        }} /> */}
+                        <Button onClickCapture={() => {
+                            DataSourceManager_MYSQL_Run("Run", (bol) => {
+                                toast(bol)
+                            });
+                        }}>
+                            启动服务
+                        </Button>
                     </div >
                 }
             },

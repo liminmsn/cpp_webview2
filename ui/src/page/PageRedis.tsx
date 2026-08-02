@@ -1,10 +1,17 @@
 import type { RootState } from "@/store/store";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Empty from "./Empty";
 import ViewRedis from "./view/ViewRedis";
+import { DataSourceManager_GetState } from "@/event/DataSourceManager";
+import { updateState } from "@/store/features/serviceSlice";
+import { useEffect } from "react";
 
 export default function () {
     const services = useSelector((state: RootState) => state.services)
+    const dispatch = useDispatch()
+    useEffect(() => {
+        DataSourceManager_GetState((state) => dispatch(updateState(state)))
+    }, [dispatch]);
 
     if (services.redis.InitialState)
         return <ViewRedis />
