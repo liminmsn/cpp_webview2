@@ -7,16 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { LabeledHandle } from '@/components/labeled-handle';
 import { BaseHandle } from '@/components/base-handle';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { useSelector } from 'react-redux';
-import { DataSourceManager_Injection } from '@/event/DataSourceManager';
-import { useEffect } from 'react';
-import { toast } from 'sonner';
+import { useDispatch, useSelector } from 'react-redux';
+import { DataSourceManager_Injection, DataSourceManager_MYSQL_Initd } from '@/event/DataSourceManager';
+import { useEffect, useState } from 'react';
 import XyFlow from '@/components/XyFlow';
 import type { RootState } from '@/store/store';
 import type { BaseNodePropChildrenDataType } from '@/components/XyFlow/RMBaseNode';
+import { updateCurrentState } from '@/store/features/currentSlice';
 
 
 export default function () {
@@ -55,7 +53,8 @@ export default function () {
                     <img src={sql} className="w-6" />
                     <BaseNodeHeaderTitle>Mysql</BaseNodeHeaderTitle>
                 </>,
-                ContentComponent: () => {
+                ContentComponent: function () {
+
                     return <div className='w-30 text-center'>
                         <span>服务状态</span>
                         <div>
@@ -76,41 +75,45 @@ export default function () {
         {
             type: "baseNodeFull",
             id: "mysql_out_log",
-            position: { x: -20, y: 200 },
+            position: { x: -140, y: 200 },
             data: {
-                targetData: {
-                    logLabel: ""
+                HeaderComponent: function () {
+                    const dispatch = useDispatch()
+                    const current = useSelector((state: RootState) => state.current)
+                    return <>
+                        <BaseHandle type="target" position={Position.Top} />
+                        <Info className="size-4" />
+                        <BaseNodeHeaderTitle>
+                            日志
+                        </BaseNodeHeaderTitle>
+                        <Button className="nodrag nopan cursor-pointer" variant="destructive" onClick={() => {
+                            dispatch(updateCurrentState({ ...current, mysql: { log: "" } }))
+                        }}>清空日志</Button>
+                    </>
                 },
-                HeaderComponent: function ({ targetData }: BaseNodePropChildrenDataType) {
-                    if (targetData) {
-                        const [, setData] = targetData;
-                        return <>
-                            <BaseHandle type="target" position={Position.Top} />
-                            <Info className="size-4" />
-                            <BaseNodeHeaderTitle>
-                                输出日志
-                            </BaseNodeHeaderTitle>
-                            <Button className="nodrag nopan cursor-pointer" variant="ghost" onClick={() => setData({ logLabel: "" })}>清空日志</Button>
-                        </>
-                    }
-                },
-                ContentComponent: function ({ targetData }: BaseNodePropChildrenDataType) {
-                    const [data_log, setData] = targetData;
+                ContentComponent: function () {
+                    const dispatch = useDispatch()
+                    const current = useSelector((state: RootState) => state.current)
 
-                    const onMessage = ({ data: d }: WebView2Event) => {
-                        setData({ data_log, logLabel: JSON.stringify(d) });
-                    }
                     useEffect(() => {
+                        const onMessage = ({ data: d }: WebView2Event) => {
+                            if (d && d.data.type == "MysqlLog") {
+                                const msg = d.data.msg;
+                                current.mysql.log = current.mysql.log += `${msg}\n`;
+                                dispatch(updateCurrentState(current));
+                            }
+                        }
+
                         window.chrome.webview.addEventListener("message", onMessage);
                         return function () {
                             window.chrome.webview.removeEventListener("message", onMessage);
                         }
-                    }, [])
-                    return <div className='h-50 overflow-y-auto nodrag nopan'>
+                    }, [current, dispatch])
+                    return <div className='h-80 overflow-y-auto nodrag nopan'>
                         <Textarea
-                            className='nodrag nopan max-w-70 w-70 h-full'
+                            className='nodrag nopan nowheel w-100 h-full text-[10px]!'
                             placeholder="服务日志..."
-                            value={data_log?.logLabel}
+                            value={current.mysql.log}
                             onChange={() => { }}
                         />
                     </div>
@@ -124,8 +127,8 @@ export default function () {
                 targetData: {
                     configLabel: `[mysqld]
 console
-basedir=${services.mysql.outDir}
-datadir=${services.mysql.outDir}\\data
+basedir=${services.mysql.outDir.replaceAll("\\", "/")}
+datadir=${services.mysql.outDir.replaceAll("\\", "/")}/data
 port=3306
 character-set-server=utf8mb4
 collation-server=utf8mb4_general_ci
@@ -151,7 +154,7 @@ default-character-set=utf8mb4`
                         const [data, setData] = targetData;
                         return <>
                             <Textarea
-                                className='nodrag nopan w-110 h-70'
+                                className='nodrag nopan nowheel w-110 h-70'
                                 placeholder="my.ini配置"
                                 value={data?.configLabel}
                                 onChange={({ target }) => {
@@ -181,16 +184,34 @@ default-character-set=utf8mb4`
                     </BaseNodeHeaderTitle>
                 </>,
                 ContentComponent: function ({ sourceData }: BaseNodePropChildrenDataType) {
-                    if (sourceData) {
-                        const [data] = sourceData;
-                        return <div className='nodrag nopan'>
-                            <Button onClickCapture={() => {
-                                DataSourceManager_Injection("MYSQL",
-                                    { key: "CreateConfig", val: data.configLabel },
-                                    (data) => toast(data))
-                            }}>安装服务</Button>
+                    const [data] = sourceData;
+
+                    const [initd, setInitd] = useState(false);
+                    const [disabled, setDisabled] = useState(false);
+                    useEffect(() => {
+                        DataSourceManager_MYSQL_Initd(setInitd);
+                    }, [])
+
+                    if (initd) {
+                        return <div>
+                            <div>
+                                <Badge variant="secondary" className="bg-chart-3">
+                                    配置完成
+                                </Badge>
+                            </div>
                         </div>
                     }
+
+                    return <div className='nodrag nopan'>
+                        <Button disabled={disabled} onClickCapture={() => {
+                            setDisabled(true);
+                            DataSourceManager_Injection("MYSQL", { key: "CreateConfig", val: data.configLabel }, () => {
+                                setTimeout(() => {
+                                    setDisabled(false);
+                                }, 1000);
+                            })
+                        }}>初始化</Button>
+                    </div>
                 }
             },
             type: "baseNodeFull",
@@ -206,12 +227,21 @@ default-character-set=utf8mb4`
                         运行
                     </BaseNodeHeaderTitle>
                 </>,
-                content: <div className='nodrag nopan'>
-                    <div className="flex items-center space-x-2">
-                        <Label htmlFor="airplane-mode">ON|OFF:</Label>
-                        <Switch id="airplane-mode" />
-                    </div>
-                </div>
+                ContentComponent: function () {
+                    return < div className='nodrag nopan' >
+                        {/* <div className='flex gap-x-1.5 items-center mb-0.5'>
+                            <Label htmlFor="airplane-mode">状态:</Label>
+                            {
+                                state ?
+                                    <Badge variant="secondary" className="bg-chart-3">ON</Badge> :
+                                    <Badge variant="secondary" className="bg-chart-2">OFF</Badge>
+                            }
+                        </div>
+                        <Switch id="airplane-mode" onCheckedChange={(checked) => {
+                            DataSourceManager_MYSQL_Run(checked ? "Run" : "Stop", setState);
+                        }} /> */}
+                    </div >
+                }
             },
             type: "baseNodeFull",
         }

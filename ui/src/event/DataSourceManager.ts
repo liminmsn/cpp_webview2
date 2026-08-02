@@ -40,14 +40,41 @@ export function DataSourceManager_GetOutDir(key: "MYSQL" | "REDIS", call: (outDi
         }
     }, call)
 }
-export function DataSourceManager_Injection(key: "MYSQL" | "REDIS", data: any, call: (data: string) => void) {
+export function DataSourceManager_Injection(key: "MYSQL" | "REDIS", data: any, call: (data: any) => void) {
+    GlobalWebViewEbent.send({
+        id: crypto.randomUUID(),
+        data: {
+            type: "DataSourceManager",
+            data: {
+                type: key,
+                data,
+            }
+        }
+    }, call)
+}
+export function DataSourceManager_MYSQL_Initd(call: (bool: any) => void) {
     GlobalWebViewEbent.send({
         id: crypto.randomUUID(),
         data: {
             type: "DataSourceManager",
             data: {
                 type: "MYSQL",
-                data,
+                data: {
+                    key: "Initd"
+                }
+            }
+        }
+    }, call)
+}
+
+export function DataSourceManager_MYSQL_Run(key: "Run" | "Stop", call: (bool: any) => void) {
+    GlobalWebViewEbent.send({
+        id: crypto.randomUUID(),
+        data: {
+            type: "DataSourceManager",
+            data: {
+                type: "MYSQL",
+                data: { key }
             }
         }
     }, call)

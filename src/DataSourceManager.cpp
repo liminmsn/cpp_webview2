@@ -14,15 +14,15 @@ void DataSourceManager::OnMessage(json& pos) {
 	if (pos["data"] == "GetState") {
 		GetState();
 	}
-	else if (pos["data"]["type"] == "GetOutDir") {
-		std::string type = pos["data"]["key"].get<std::string>();
-		this->GetOutDir(type);
-	}
 	else if (pos["data"] == "InitMysql") {
 		m_sourcesMap["MYSQL"]->Init();
 	}
 	else if (pos["data"] == "InitRedis") {
 		m_sourcesMap["REDIS"]->Init();
+	}
+	else if (pos["data"]["type"] == "GetOutDir") {
+		std::string type = pos["data"]["key"].get<std::string>();
+		this->GetOutDir(type);
 	}
 	else if (pos["data"]["type"] == "FileExists") {
 		std::string& path = pos["data"]["path"].get<std::string>();
@@ -54,7 +54,8 @@ void DataSourceManager::GetState() {
 				"mysql",
 				{
 					{"InitialState",mysqlOut},
-					{"outDir",m_sourcesMap["MYSQL"]->outDir}
+					{"outDir",m_sourcesMap["MYSQL"]->outDir},
+					{"Initd",FileExists(m_sourcesMap["MYSQL"]->outDir + "\\my.ini")}
 				}
 			},
 			{

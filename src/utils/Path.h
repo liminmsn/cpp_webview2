@@ -1,8 +1,9 @@
-#include <Windows.h>
-#include <appmodel.h>
-#pragma comment(lib, "runtimeobject.lib")
+#pragma once
 #include <iostream>
 #include <filesystem>
+#include <appmodel.h>
+#pragma comment(lib, "runtimeobject.lib")
+
 
 inline std::wstring GetExeDir()
 {

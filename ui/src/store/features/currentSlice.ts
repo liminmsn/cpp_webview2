@@ -1,0 +1,24 @@
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+
+type CurrentStateType = {
+  mysql: { log: string }
+  redis: { log: string }
+}
+
+const initialState: CurrentStateType = {
+  mysql: { log: "" },
+  redis: { log: "" }
+}
+
+const currentSlice = createSlice({
+  name: 'current',
+  initialState: initialState,
+  reducers: {
+    updateCurrentState: (state, action: PayloadAction<CurrentStateType>) => {
+      return { ...state, ...action.payload }
+    }
+  }
+})
+
+export const { updateCurrentState } = currentSlice.actions
+export default currentSlice.reducer
