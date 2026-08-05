@@ -18,7 +18,7 @@ import '@xyflow/react/dist/style.css';
 /**Data管理文件夹 */
 const DataNode = {
     id: "node_3",
-    position: { x: 470, y: 380 },
+    position: { x: 350, y: 380 },
     data: {
         targetData: {
             initdServer: false
@@ -88,7 +88,7 @@ const DataNode = {
 /***运行节点**/
 const RunNode = {
     id: "node_2",
-    position: { x: 650, y: 380 },
+    position: { x: 520, y: 380 },
     data: {
         header: <>
             <BaseHandle type="target" position={Position.Left} />
@@ -152,9 +152,9 @@ const RunNode = {
             }
 
             useEffect(() => {
-                setTimeout(() => {
-                    flow.fitView()
-                }, 100);
+                // flow.fitView()
+                // setTimeout(() => {
+                // }, 1000);
             }, [flow, current, disabled, dispatch]);
 
             if (current.ismysqlRun) {
@@ -224,7 +224,7 @@ export default function () {
         {
             type: "RMBaseNode",
             id: "mysql_0",
-            position: { x: 140, y: 0 },
+            position: { x: 0, y: 0 },
             data: {
                 header: <>
                     <img src={sql} className="w-6" />
@@ -251,7 +251,7 @@ export default function () {
         {
             type: "RMBaseNode",
             id: "mysql_out_log",
-            position: { x: -100, y: 200 },
+            position: { x: -180, y: 200 },
             data: {
                 targetData: {
                     log: localStorage.getItem("mysql_out_log") || ""
@@ -299,7 +299,7 @@ export default function () {
         },
         {
             id: "node_0",
-            position: { x: 300, y: 0 },
+            position: { x: 220, y: 0 },
             data: {
                 targetData: {
                     configLabel: `[mysqld]
@@ -350,7 +350,7 @@ default-character-set=utf8mb4`
         },
         {
             id: "node_1",
-            position: { x: 300, y: 380 },
+            position: { x: 220, y: 380 },
             data: {
                 targetData: { initd: false },
                 HeaderComponent({ targetData }: BaseNodePropChildrenDataType) {
@@ -395,7 +395,7 @@ default-character-set=utf8mb4`
                             DataSourceManager_Injection("MYSQL", { key: "CreateConfig", val: data_source.configLabel }, () => {
                                 setTimeout(() => {
                                     setDisabled(false);
-                                }, 1000);
+                                }, 100);
                             })
                         }}>{data.initd ? "重写" : "写入"}配置</Button>
                         {data.initd && <div className='bg-chart-3/40 p-2 rounded-sm mt-1'>
@@ -408,7 +408,7 @@ default-character-set=utf8mb4`
         },
         {
             id: "node_label_0",
-            position: { x: 300, y: 520 },
+            position: { x: 220, y: 520 },
             data: {
                 label: <div className='max-w-35 font_zhka'>
                     <span className='text-primary'>重写配置</span>
@@ -419,7 +419,7 @@ default-character-set=utf8mb4`
         },
         {
             id: "node_label_1",
-            position: { x: 470, y: 520 },
+            position: { x: 350, y: 520 },
             data: {
                 label: <div className='max-w-35 font_zhka'>
                     <span className='text-primary'>Data目录</span>
@@ -430,7 +430,7 @@ default-character-set=utf8mb4`
         },
         {
             id: "node_label_2",
-            position: { x: -100, y: 610 },
+            position: { x: -190, y: 610 },
             data: {
                 label: <ol className='flex flex-col gap-y-1max-w-80'>
                     <li className='text-primary font-bold font_zhka'>运行</li>
