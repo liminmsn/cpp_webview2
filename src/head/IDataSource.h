@@ -11,6 +11,7 @@ public:
 public:
 	std::string zipPath;
 	std::string outDir;
+	std::string baseDir;
 	std::string GetOutDir() const {
 		return outDir;
 	}

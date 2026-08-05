@@ -19,9 +19,9 @@ MysqlManager::MysqlManager(AppLication& app) :m_app(app)
 
 	outDir = (fs::path(basePath) / "mysql").string();
 
-	if (directoryExistsAndNotEmpty(outDir)) {
-		outDir += "\\mysql-8.4.10-winx64";
-	}
+	baseDir = outDir + "\\mysql-8.4.10-winx64";
+	//if (directoryExistsAndNotEmpty(outDir)) {
+	//}
 }
 
 bool MysqlManager::IsMySQLRunning(int port = 3306, std::string* outInfo = nullptr, int connectTimeoutMs = 500)
@@ -81,10 +81,10 @@ bool MysqlManager::IsMySQLRunning(int port = 3306, std::string* outInfo = nullpt
 	else {
 		int last = WSAGetLastError();
 		if (last == WSAEWOULDBLOCK || last == WSAEINPROGRESS) {
-			fd_set writeSet;
+			fd_set writeSet = {};
 			FD_ZERO(&writeSet);
 			FD_SET(s, &writeSet);
-			timeval tv;
+			timeval tv = {};
 			tv.tv_sec = connectTimeoutMs / 1000;
 			tv.tv_usec = (connectTimeoutMs % 1000) * 1000;
 			int sel = select(0, nullptr, &writeSet, nullptr, &tv);
@@ -194,7 +194,30 @@ void MysqlManager::Send(std::string msg) {
 	m_app.bridge->SendId(res);
 }
 
-bool MysqlManager::StopMysqldUsingMysqladmin(const std::string& binDir, const std::string& mysqladminArgs = "-u root -p", int port = 3306, int waitMs = 5000)
+bool MysqlManager::InitializeMysql() {
+	std::string mysqld = baseDir + "\\bin\\mysqld.exe";
+	std::string cmd =
+		"\"" + mysqld +
+		"\" --defaults-file=\"" +
+		baseDir +
+		"\\my.ini\" --initialize --console";
+
+	bool success = true;
+
+	RunCommandWithOutput(cmd,
+		[&](const std::string& output) {
+			Send(output);
+			// 根据输出判断是否有错误
+			if (output.find("error") != std::string::npos ||
+				output.find("failed") != std::string::npos) {
+				success = false;
+			}
+		});
+
+	return success;
+}
+
+bool MysqlManager::StopMysqldUsingMysqladmin(const std::string& binDir, const std::string& mysqladminArgs = "-u root", int port = 3306, int waitMs = 5000)
 {
 	std::string exe = binDir;
 	if (!exe.empty() && (exe.back() != '\\' && exe.back() != '/')) exe += "\\";
@@ -220,33 +243,45 @@ bool MysqlManager::StopMysqldUsingMysqladmin(const std::string& binDir, const st
 }
 
 void MysqlManager::OnMessage(json& data) {
-	std::string workDir = outDir + "\\bin";
-	std::string mysqld = outDir + "\\bin\\mysqld.exe";
+	std::string workDir = baseDir + "\\bin";
+	std::string mysqld = baseDir + "\\bin\\mysqld.exe";
 
-	if (data["key"] == "CreateConfig")
+
+	if (data["key"] == "Initd")
+		m_app.bridge->SendId(FileExists(baseDir + "\\my.ini"));
+		//m_app.bridge->SendId(directoryExistsAndNotEmpty(baseDir + "\\data") && FileExists(baseDir + "\\my.ini"));
+	if (data["key"] == "InitdServer")
+		m_app.bridge->SendId(directoryExistsAndNotEmpty(baseDir + "\\data"));
+	else if (data["key"] == "InitializeMysql")
+		m_app.bridge->SendId(InitializeMysql());
+	else if (data["key"] == "Stop")
+		m_app.bridge->SendId(!StopMysqldUsingMysqladmin(workDir, data["mysqladminArgs"].get<std::string>()));
+	else if (data["key"] == "IsRun")
+		m_app.bridge->SendId(IsMySQLRunning());
+	else if (data["key"] == "CreateConfig")
 	{
 		std::string& ConfigLabel = data["val"].get<std::string>();
-		if (WriteFile(outDir + "\\my.ini", ConfigLabel) && CreateDirectory(outDir, "data")) {
-			if (directoryExistsAndNotEmpty(outDir + "\\data")) {
-				Send("已经初始化成功过了！");
-				return;
+		std::string dataDir = baseDir + "\\data";
+		if (WriteFile(baseDir + "\\my.ini", ConfigLabel))
+		{
+			// 创建 data 目录
+			if (!CreateDirectoryA(dataDir.c_str(), nullptr))
+			{
+				DWORD err = GetLastError();
+				if (err != ERROR_ALREADY_EXISTS)
+				{
+					Send("创建data目录失败！");
+					return;
+				}
 			}
 
-			std::string cmd = "\"" + mysqld + "\" --initialize-insecure --console";
-			RunCommandWithOutput(cmd, [&](const std::string& output) {
-				Send(output);
-				});
+			if (directoryExistsAndNotEmpty(dataDir)) {
+				Send("重写配置成功！");
+				return;
+			}
 			Send("写入配置成功！");
 		}
-		else
-		{
-			Send("写入配置失败！");
-		}
-	}
-	else if (data["key"] == "Initd")
-	{
-		bool initd = directoryExistsAndNotEmpty(outDir + "\\data") && FileExists(outDir + "\\my.ini");
-		m_app.bridge->SendId(initd);
+		else Send("写入配置失败！");
 	}
 	else if (data["key"] == "Run") {
 		std::string cmd = "\"" + mysqld + "\" --defaults-file=\"..\\my.ini\" --console";
@@ -255,18 +290,8 @@ void MysqlManager::OnMessage(json& data) {
 			[&](const std::string& output) {
 				Send(output);
 			}, nullptr, workDir))
-		{
 			m_app.bridge->SendId(true);
-		}
-		else {
+		else
 			m_app.bridge->SendId(false);
-		}
-	}
-	else if (data["key"] == "Stop") {
-		std::string mysqladminArgs = data["mysqladminArgs"].get<std::string>();
-		StopMysqldUsingMysqladmin(workDir, mysqladminArgs);
-	}
-	else if (data["key"] == "IsRun") {
-		m_app.bridge->SendId(IsMySQLRunning());
 	}
 }

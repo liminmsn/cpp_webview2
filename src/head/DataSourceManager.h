@@ -16,4 +16,5 @@ private:
 	std::unordered_map<std::string, std::unique_ptr<IDataSource>> m_sourcesMap;
 	void GetState();
 	void GetOutDir(std::string type);
+	bool OpenWithExplorer(const std::string& path);
 };

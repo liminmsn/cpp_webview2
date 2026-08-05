@@ -29,8 +29,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       style={
         {
-          // "--normal-bg": "var(--popover)",
-          "--normal-bg": "rgba(0,0,0,0.2)",
+          "--normal-bg": "var(--popover)",
           "--normal-text": "var(--popover-foreground)",
           "--normal-border": "var(--border)",
           "--border-radius": "var(--radius)",

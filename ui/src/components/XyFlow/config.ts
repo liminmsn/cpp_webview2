@@ -1,8 +1,9 @@
 import type { DefaultEdgeOptions, NodeTypes } from "@xyflow/react";
 import RMBaseNode from "./RMBaseNode";
+import RMAnnotationNode from "./RMAnnotationNode";
 
 const nodeTypes: NodeTypes = {
-    baseNodeFull: RMBaseNode
+    RMAnnotationNode, RMBaseNode
 };
 
 const defaultEdgeOptions: DefaultEdgeOptions = {

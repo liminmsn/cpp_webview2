@@ -15,7 +15,6 @@ export default class GlobalWebViewEbent {
                     this.listenerArr.delete(data.id);
                 }
             }
-
         })
     }
     static send(parameter: WebView2EventData, callback: (data: any) => void) {

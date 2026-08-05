@@ -18,6 +18,28 @@ export function DataSourceManager_GetState(call: (states: ServiceStateType) => v
         }
     }, call)
 }
+export function DataSourceManager_OpenWithExplorer(path: string, call: (states: ServiceStateType) => void) {
+    GlobalWebViewEbent.send({
+        id: crypto.randomUUID(),
+        data: {
+            type: "DataSourceManager",
+            data: "OpenWithExplorer",
+            path
+        }
+    }, call)
+}
+export function DataSourceManager_OpenNewTerminal(path: string, args: string, call: (states: ServiceStateType) => void) {
+    GlobalWebViewEbent.send({
+        id: crypto.randomUUID(),
+        data: {
+            type: "DataSourceManager",
+            data: "OpenNewTerminal",
+            path, args
+        }
+    }, call)
+}
+
+
 export function DataSourceManager_Init(initKey: string) {
     GlobalWebViewEbent.sendOnce({
         id: crypto.randomUUID(),
@@ -61,6 +83,35 @@ export function DataSourceManager_MYSQL_Initd(call: (bool: any) => void) {
                 type: "MYSQL",
                 data: {
                     key: "Initd"
+                }
+            }
+        }
+    }, call)
+}
+
+export function DataSourceManager_MYSQL_InitdServer(call: (bool: any) => void) {
+    GlobalWebViewEbent.send({
+        id: crypto.randomUUID(),
+        data: {
+            type: "DataSourceManager",
+            data: {
+                type: "MYSQL",
+                data: {
+                    key: "InitdServer"
+                }
+            }
+        }
+    }, call)
+}
+export function DataSourceManager_MYSQL_InitializeMysql(call: (bool: any) => void) {
+    GlobalWebViewEbent.send({
+        id: crypto.randomUUID(),
+        data: {
+            type: "DataSourceManager",
+            data: {
+                type: "MYSQL",
+                data: {
+                    key: "InitializeMysql"
                 }
             }
         }

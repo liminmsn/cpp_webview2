@@ -39,15 +39,16 @@ const baseNode = memo(({ id, data }: BaseNodePropType) => {
   return <NodeStatusIndicator status="initial" variant="overlay">
     <BaseNode className="shadow-sm">
       {
-        (data.header || data.ContentComponent) &&
+        data.header &&
         <BaseNodeHeader className="border-b">
-          {data.header && data.header}
-          {data.HeaderComponent &&
-            <data.HeaderComponent
-              targetData={data.targetData}
-              sourceData={targetDataParent}
-            />
-          }
+          {data.header}
+        </BaseNodeHeader>
+        || data.HeaderComponent &&
+        <BaseNodeHeader className="border-b">
+          <data.HeaderComponent
+            targetData={data.targetData}
+            sourceData={targetDataParent}
+          />
         </BaseNodeHeader>
       }
       {
