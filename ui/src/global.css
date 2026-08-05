@@ -1,5 +1,16 @@
 @import "./index.css";
 
+@font-face {
+  font-family: "zhka";
+  src: url("/zhka.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+.font_zhka{
+    font-family: 'zhka', Courier, monospace;
+}
+
 :root {
 
     /* --sidebar: rgba(0, 0, 0, 0); */

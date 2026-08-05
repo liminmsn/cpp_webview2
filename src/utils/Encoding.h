@@ -31,17 +31,22 @@ inline std::wstring Utf8ToUtf16(const std::string& str)
         return {};
 
     int size = MultiByteToWideChar(
-        CP_UTF8, 0,
-        str.c_str(), -1,
-        nullptr, 0);
+        CP_UTF8,
+        0,
+        str.c_str(),
+        -1,
+        nullptr,
+        0);
 
     std::wstring result(size - 1, L'\0');
 
     MultiByteToWideChar(
-        CP_UTF8, 0,
-        str.c_str(), -1,
-        result.data(), size);
-
+        CP_UTF8,
+        0,
+        str.c_str(),
+        -1,
+        result.data(),
+        size);
     return result;
 }
 

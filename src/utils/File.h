@@ -32,3 +32,36 @@ inline bool CreateDirectory(const std::string& basePath, const std::string& dirN
         return false;
     }
 }
+
+// 删除指定目录
+inline bool RemoveDirectory(const std::string& path) {
+    try {
+        if (!std::filesystem::exists(path)) {
+            return true;
+        }
+
+        std::filesystem::remove_all(path);
+        return true;
+    }
+    catch (const std::filesystem::filesystem_error&) {
+        return false;
+    }
+}
+
+// 删除目录下所有内容（保留目录）
+inline bool ClearDirectory(const std::string& path) {
+    try {
+        if (!std::filesystem::exists(path)) {
+            return true;
+        }
+
+        for (const auto& entry : std::filesystem::directory_iterator(path)) {
+            std::filesystem::remove_all(entry.path());
+        }
+
+        return true;
+    }
+    catch (const std::filesystem::filesystem_error&) {
+        return false;
+    }
+}

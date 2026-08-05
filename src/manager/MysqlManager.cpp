@@ -5,6 +5,8 @@
 #include "../utils/File.h"
 #include "../head/AppLication.h"
 #include "../head/MysqlManager.h"
+#include <tlhelp32.h>
+#include <utils.h>
 #include <thread>
 
 MysqlManager::MysqlManager(AppLication& app) :m_app(app)
@@ -195,6 +197,12 @@ void MysqlManager::Send(std::string msg) {
 }
 
 bool MysqlManager::InitializeMysql() {
+	if (IsMysqldProcessRunning())
+	{
+		Send("检测到 mysqld.exe 正在运行，禁止初始化！");
+		return false;
+	}
+
 	std::string mysqld = baseDir + "\\bin\\mysqld.exe";
 	std::string cmd =
 		"\"" + mysqld +
@@ -217,52 +225,83 @@ bool MysqlManager::InitializeMysql() {
 	return success;
 }
 
-bool MysqlManager::StopMysqldUsingMysqladmin(const std::string& binDir, const std::string& mysqladminArgs = "-u root", int port = 3306, int waitMs = 5000)
+bool MysqlManager::IsMysqldProcessRunning()
 {
-	std::string exe = binDir;
-	if (!exe.empty() && (exe.back() != '\\' && exe.back() != '/')) exe += "\\";
-	exe += "mysqladmin.exe";
-	std::string cmd = "\"" + exe + "\" " + mysqladminArgs + " shutdown";
+	HANDLE hSnapshot = CreateToolhelp32Snapshot(
+		TH32CS_SNAPPROCESS,
+		0
+	);
 
-	std::string output;
-	RunCommandWithOutput(cmd,
-		[&](const std::string& s) {
-			Send(output += s);
-		});
-	const int stepMs = 200;
-	int waited = 0;
-	while (waited < waitMs) {
-		ServerCheckPortUsage usage = CheckPortUsage(port);
-		if (usage.Props.empty()) {
-			return true;
-		}
-		Sleep(stepMs);
-		waited += stepMs;
+	if (hSnapshot == INVALID_HANDLE_VALUE)
+		return false;
+
+	PROCESSENTRY32W pe;
+	pe.dwSize = sizeof(PROCESSENTRY32W);
+
+	bool found = false;
+
+	if (Process32FirstW(hSnapshot, &pe))
+	{
+		do
+		{
+			if (_wcsicmp(pe.szExeFile, L"mysqld.exe") == 0)
+			{
+				found = true;
+				break;
+			}
+
+		} while (Process32NextW(hSnapshot, &pe));
 	}
-	return false;
+
+	CloseHandle(hSnapshot);
+
+	return found;
 }
+
+//bool MysqlManager::StopMysqldUsingMysqladmin(const std::string& binDir, const std::string& mysqladminArgs = "-u root", int port = 3306, int waitMs = 5000)
+//{
+//	std::string exe = binDir;
+//	if (!exe.empty() && (exe.back() != '\\' && exe.back() != '/')) exe += "\\";
+//	exe += "mysqladmin.exe";
+//	std::string cmd = "\"" + exe + "\" " + mysqladminArgs + " shutdown";
+//
+//	std::string output;
+//	RunCommandWithOutput(cmd,
+//		[&](const std::string& s) {
+//			Send(output += s);
+//		});
+//	const int stepMs = 200;
+//	int waited = 0;
+//	while (waited < waitMs) {
+//		ServerCheckPortUsage usage = CheckPortUsage(port);
+//		if (usage.Props.empty()) {
+//			return true;
+//		}
+//		Sleep(stepMs);
+//		waited += stepMs;
+//	}
+//	return false;
+//}
 
 void MysqlManager::OnMessage(json& data) {
 	std::string workDir = baseDir + "\\bin";
 	std::string mysqld = baseDir + "\\bin\\mysqld.exe";
+	std::string mysqladmin = baseDir + "\\bin\\mysqladmin.exe";
 
 
 	if (data["key"] == "Initd")
 		m_app.bridge->SendId(FileExists(baseDir + "\\my.ini"));
-		//m_app.bridge->SendId(directoryExistsAndNotEmpty(baseDir + "\\data") && FileExists(baseDir + "\\my.ini"));
 	if (data["key"] == "InitdServer")
 		m_app.bridge->SendId(directoryExistsAndNotEmpty(baseDir + "\\data"));
 	else if (data["key"] == "InitializeMysql")
 		m_app.bridge->SendId(InitializeMysql());
-	else if (data["key"] == "Stop")
-		m_app.bridge->SendId(!StopMysqldUsingMysqladmin(workDir, data["mysqladminArgs"].get<std::string>()));
 	else if (data["key"] == "IsRun")
 		m_app.bridge->SendId(IsMySQLRunning());
 	else if (data["key"] == "CreateConfig")
 	{
 		std::string& ConfigLabel = data["val"].get<std::string>();
 		std::string dataDir = baseDir + "\\data";
-		if (WriteFile(baseDir + "\\my.ini", ConfigLabel))
+		if (WriteFile(baseDir + "\\my.ini", ConfigLabel) && RemoveDirectory(dataDir))
 		{
 			// 创建 data 目录
 			if (!CreateDirectoryA(dataDir.c_str(), nullptr))
@@ -285,7 +324,6 @@ void MysqlManager::OnMessage(json& data) {
 	}
 	else if (data["key"] == "Run") {
 		std::string cmd = "\"" + mysqld + "\" --defaults-file=\"..\\my.ini\" --console";
-
 		if (StartProcessAndStreamOutput(cmd,
 			[&](const std::string& output) {
 				Send(output);
@@ -293,5 +331,19 @@ void MysqlManager::OnMessage(json& data) {
 			m_app.bridge->SendId(true);
 		else
 			m_app.bridge->SendId(false);
+	}
+	else if (data["key"] == "Stop") {
+		std::string Args = data["mysqladminArgs"].get<std::string>();
+		std::string args = Args + " shutdown";
+
+		std::wstring mysqladminPath = Utf8ToUtf16(mysqladmin);
+
+		bool res = false;
+		utils.execute_process(
+			mysqladminPath.c_str(),
+			args.c_str(),
+			&res
+		);
+		m_app.bridge->SendId(res);
 	}
 }

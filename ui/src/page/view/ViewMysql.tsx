@@ -15,7 +15,6 @@ import { useNodesState, Position, useEdgesState, useReactFlow } from '@xyflow/re
 import { useEffect, useState } from 'react';
 import sql from "@/assets/sql.png";
 import '@xyflow/react/dist/style.css';
-import { toast } from 'sonner';
 /**Data管理文件夹 */
 const DataNode = {
     id: "node_3",
@@ -80,7 +79,7 @@ const DataNode = {
                         setDisabled(false);
                         setData({ initdServer: bool })
                     })
-                }}>DATA初始化</Button>
+                }}>初始化</Button>
             </div>
         }
     },
@@ -99,12 +98,12 @@ const RunNode = {
             </BaseNodeHeaderTitle>
         </>,
         ContentComponent() {
+            const flow = useReactFlow()
             const dispatch = useDispatch();
 
             const services = useSelector((state: RootState) => state.services)
             const current = useSelector((state: RootState) => state.current)
             const [disabled, setDisabled] = useState(false);
-            useEffect(() => { }, [disabled, dispatch]);
 
             function onToggle(key: "Run" | "Stop", mysqladminArgs: string) {
                 setDisabled(true);
@@ -118,50 +117,48 @@ const RunNode = {
                             }));
                             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                             //@ts-ignore
-                            toast(`服务已经${bool ? "启动" : "停止"}`, { type: "info", position: "bottom-left" });
+                            // toast(`服务已经${bool ? "启动" : "停止"}`, { type: "info", position: "bottom-left" });
                         });
-                    }, 100);
+                    }, 1000);
                 });
             }
 
 
             function onSubmit(e: React.SubmitEvent<HTMLFormElement>) {
                 e.preventDefault();
-                console.log(e.nativeEvent);
                 const { target, submitter } = e.nativeEvent;
                 const form = target as HTMLFormElement;
                 const formData = new FormData(form);
                 formData.append("action", submitter?.getAttribute("name") || "")
-                onAction(formData);
-            }
 
-            function onAction(formData: FormData) {
-                const user = formData.get("user") as string;
+
+                const username = formData.get("user") as string;
                 const password = formData.get("password") as string;
                 const action = formData.get("action") as string;
-
                 const mysqladminArgs = (() => {
                     if (password) {
-                        return `-u${user} -p${password}`;
+                        return `-u"${username}" -p'${password}'`;
                     }
-                    return `-u ${user}`;
+                    return `-u "${username}"`;
                 })();
 
-                switch (action) {
-                    case "stop_server":
-                        // onToggle("Stop", mysqladminArgs)
-                        break;
-                    case "open_terminal":
-                        DataSourceManager_OpenNewTerminal(services.mysql.outDir + "\\bin\\mysql.exe", mysqladminArgs, (bool) => {
-                            console.log(bool);
-                        })
-                        break;
+                if (action === "stop_server") {
+                    onToggle("Stop", mysqladminArgs)
+                } else if (action === "open_terminal") {
+                    DataSourceManager_OpenNewTerminal(`${services.mysql.outDir}\\bin\\mysql.exe`, mysqladminArgs, (bool) => {
+                        console.log(bool);
+                    })
                 }
             }
 
+            useEffect(() => {
+                setTimeout(() => {
+                    flow.fitView()
+                }, 100);
+            }, [flow, current, disabled, dispatch]);
+
             if (current.ismysqlRun) {
                 return < div className='nodrag nopan' >
-                    {/* <form action={useForm}> */}
                     <form onSubmit={onSubmit}>
                         <div className='flex flex-col gap-y-1.5'>
                             <input
@@ -173,7 +170,7 @@ const RunNode = {
                             <input
                                 required
                                 className='outline-none border-chart-1/25 border-2 pl-1'
-                                placeholder='密码(日志有默认密码信息)'
+                                placeholder='密码(注意多余空格)'
                                 name="password"
                                 type='password' />
                             <Button name="stop_server" type='submit' variant="destructive" disabled={disabled}>终止服务</Button>
@@ -267,7 +264,7 @@ export default function () {
                         <BaseNodeHeaderTitle>
                             日志
                         </BaseNodeHeaderTitle>
-                        <Button className="nodrag nopan cursor-pointer" variant="destructive" onClick={() => {
+                        <Button className="nodrag nopan nowheel cursor-pointer" variant="destructive" onClick={() => {
                             setData({ ...data, log: "" })
                             localStorage.setItem("mysql_out_log", "")
                         }}>清空日志</Button>
@@ -292,7 +289,7 @@ export default function () {
                         }
                     }, [data, setData])
                     return <Textarea
-                        className='nodrag nopan w-90 min-h-50'
+                        className='nodrag nopan nowheel w-90 min-h-60 max-h-60'
                         placeholder="服务日志..."
                         value={data.log}
                         onChange={() => { }}
@@ -410,11 +407,41 @@ default-character-set=utf8mb4`
             type: "RMBaseNode",
         },
         {
-            id: "node_4",
-            position: { x: 400, y: 480 },
-            data: { id: '', data: "" },
+            id: "node_label_0",
+            position: { x: 300, y: 520 },
+            data: {
+                label: <div className='max-w-35 font_zhka'>
+                    <span className='text-primary'>重写配置</span>
+                    <p>会删除Data目录（myql的所有数据）请备份好数据慎重重写配置</p>
+                </div>
+            },
             type: "RMAnnotationNode"
-        }
+        },
+        {
+            id: "node_label_1",
+            position: { x: 470, y: 520 },
+            data: {
+                label: <div className='max-w-35 font_zhka'>
+                    <span className='text-primary'>Data目录</span>
+                    <p>初始化日志Info会携带初始<span className='text-primary'>临时密码</span></p>
+                </div>
+            },
+            type: "RMAnnotationNode"
+        },
+        {
+            id: "node_label_2",
+            position: { x: -100, y: 610 },
+            data: {
+                label: <ol className='flex flex-col gap-y-1max-w-80'>
+                    <li className='text-primary font-bold font_zhka'>运行</li>
+                    <li className='text-primary font-bold font_zhka'>完成服务启动第一件事！！！</li>
+                    <li className='font_zhka'>1.输入用户名、临时密码。点击终端mysql</li>
+                    <li><span className='font_zhka mr-2 select-text'>2.创建永久密码执行</span><span>ALTER USER 'root'@'localhost' IDENTIFIED BY '你需要设置的密码';</span></li>
+                    <li className='font_zhka text-chart-3'>3.本地mysql正常运行</li>
+                </ol>
+            },
+            type: "RMAnnotationNode"
+        },
     ]);
 
     return <XyFlow

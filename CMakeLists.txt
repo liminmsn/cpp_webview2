@@ -16,6 +16,8 @@ set(CMAKE_WIN32_EXECUTABLE TRUE)
 # UTF-8 编译
 add_compile_options("/utf-8")
 
+add_subdirectory(utils)
+
 # vcpkg 包
 find_package(unofficial-webview2 CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
@@ -53,6 +55,7 @@ target_link_libraries(cpp_webview2 PRIVATE
     gdi32
     ole32
     shell32
+    utils
 )
 
 # 拷贝 resources 到输出目录

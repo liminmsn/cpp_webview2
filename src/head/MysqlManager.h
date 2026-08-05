@@ -12,6 +12,7 @@ public:
 public:
 	void Send(std::string msg);
 	bool InitializeMysql();
+	bool IsMysqldProcessRunning();
 	bool IsMySQLRunning(int port, std::string* outInfo, int connectTimeoutMs);
 	bool StopMysqldUsingMysqladmin(const std::string& binDir, const std::string& mysqladminArgs, int port, int waitMs);
 private:

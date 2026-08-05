@@ -4,6 +4,7 @@
 #include "head/RedisManager.h"
 #include "utils/Path.h"
 #include "utils/File.h"
+#include <utils.h>
 
 DataSourceManager::DataSourceManager(AppLication& app) :m_app(app) {
 	m_sourcesMap.emplace("MYSQL", std::make_unique<MysqlManager>(m_app));
@@ -15,19 +16,26 @@ void DataSourceManager::OnMessage(json& pos) {
 		GetState();
 	else if (pos["data"] == "OpenWithExplorer")
 		m_app.bridge->SendId(OpenWithExplorer(pos["path"]));
-	else if (pos["data" == "OpenNewTerminal"])
-		m_app.bridge->SendId(false);
-		//m_app.bridge->SendId(OpenMysqlInNewTerminal(pos["path"], pos["args"]));
+	else if (pos["data"] == "OpenNewTerminal") {
+		std::string pathUtf8 = pos["path"].get<std::string>();
+		std::string argsUtf8 = pos["args"].get<std::string>();
+		m_app.bridge->SendId(
+			(bool)utils.open_mysql_terminal(
+				Utf8ToUtf16(pathUtf8).c_str(), 
+				argsUtf8.c_str()
+			)
+		);
+	}
 	else if (pos["data"] == "InitMysql")
-		m_sourcesMap["MYSQL"]->Init();
+			m_sourcesMap["MYSQL"]->Init();
 	else if (pos["data"] == "InitRedis")
-		m_sourcesMap["REDIS"]->Init();
+			m_sourcesMap["REDIS"]->Init();
 	else if (pos["data"]["type"] == "GetOutDir")
-		GetOutDir(pos["data"]["key"].get<std::string>());
+			GetOutDir(pos["data"]["key"].get<std::string>());
 	else if (pos["data"]["type"] == "MYSQL")
-		m_sourcesMap["MYSQL"]->OnMessage(pos["data"]["data"]);
+			m_sourcesMap["MYSQL"]->OnMessage(pos["data"]["data"]);
 	else if (pos["data"]["type"] == "REDIS")
-		m_sourcesMap["REDIS"]->OnMessage(pos["data"]["data"]);
+			m_sourcesMap["REDIS"]->OnMessage(pos["data"]["data"]);
 	else if (pos["data"]["type"] == "FileExists") {
 		std::string& path = pos["data"]["path"].get<std::string>();
 		m_app.bridge->SendId(FileExists(path));

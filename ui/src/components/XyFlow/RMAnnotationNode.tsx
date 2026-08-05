@@ -5,10 +5,8 @@ export type RMAnnotationNode = {
     data: any
 }
 
-export default memo(({ id, data }: RMAnnotationNode) => {
-    return <div>
-        注释节点
-        {JSON.stringify(id)}
-        {JSON.stringify(data)}
+export default memo(({ data }: RMAnnotationNode) => {
+    return <div className="">
+        {data["label"]}
     </div>
 });
