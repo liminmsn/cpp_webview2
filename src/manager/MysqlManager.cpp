@@ -337,12 +337,10 @@ void MysqlManager::OnMessage(json& data) {
 		std::string args = Args + " shutdown";
 
 		std::wstring mysqladminPath = Utf8ToUtf16(mysqladmin);
-
-		bool res = false;
-		utils.execute_process(
+		bool res = utils.execute_process(
 			mysqladminPath.c_str(),
 			args.c_str(),
-			&res
+			false
 		);
 		m_app.bridge->SendId(res);
 	}

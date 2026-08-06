@@ -98,126 +98,164 @@ static bool open_mysql_terminal(const wchar_t* mysqlExePath, const char* argsUtf
 	return true;
 }
 
-static bool execute_process(const wchar_t* exePath, const char* argsUtf8, bool showWindow)
+static bool execute_process(
+    const wchar_t* exePath,
+    const char* argsUtf8,
+    bool showWindow
+)
 {
-	if (!exePath)
-		return false;
-
-	int argsLen = 0;
-
-	if (argsUtf8 && argsUtf8[0] != '\0')
-	{
-		argsLen = MultiByteToWideChar(
-			CP_UTF8,
-			0,
-			argsUtf8,
-			-1,
-			NULL,
-			0
-		);
-	}
+    if (!exePath)
+        return false;
 
 
-	wchar_t* args = NULL;
+    wchar_t* args = NULL;
 
 
-	if (argsLen > 0)
-	{
-		args = (wchar_t*)calloc(
-			argsLen,
-			sizeof(wchar_t)
-		);
-		if (!args)
-			return false;
+    if (argsUtf8 && argsUtf8[0] != '\0')
+    {
+        int len = MultiByteToWideChar(
+            CP_UTF8,
+            0,
+            argsUtf8,
+            -1,
+            NULL,
+            0
+        );
 
-		MultiByteToWideChar(
-			CP_UTF8,
-			0,
-			argsUtf8,
-			-1,
-			args,
-			argsLen
-		);
-	}
-	else
-	{
-		args = (wchar_t*)calloc(1, sizeof(wchar_t));
-	}
 
-	// 创建完整命令行
-	size_t cmdLen = wcslen(exePath) + wcslen(args) + 32;
-	wchar_t* cmd = (wchar_t*)calloc(cmdLen, sizeof(wchar_t));
+        if (len <= 0)
+            return false;
 
-	if (!cmd)
-	{
-		free(args);
-		return false;
-	}
 
-	swprintf_s(
-		cmd,
-		cmdLen,
-		L"\"%s\" %s",
-		exePath,
-		args
-	);
+        args = (wchar_t*)calloc(
+            len,
+            sizeof(wchar_t)
+        );
 
-	// 调试输出
-	wprintf(L"Execute CMD:\n%ls\n", cmd);
 
-	STARTUPINFOW si;
-	PROCESS_INFORMATION pi;
+        if (!args)
+            return false;
 
-	ZeroMemory(&si, sizeof(si));
-	ZeroMemory(&pi, sizeof(pi));
-	si.cb = sizeof(si);
-	DWORD flags = 0;
-	if (!showWindow)
-	{
-		flags |= CREATE_NO_WINDOW;
-	}
 
-	BOOL result = CreateProcessW(
-		NULL,
-		cmd,            // 必须可写
-		NULL,
-		NULL,
-		FALSE,
-		flags,
-		NULL,
-		NULL,
-		&si,
-		&pi
-	);
-	free(args);
-	free(cmd);
+        MultiByteToWideChar(
+            CP_UTF8,
+            0,
+            argsUtf8,
+            -1,
+            args,
+            len
+        );
+    }
+    else
+    {
+        args = (wchar_t*)calloc(
+            1,
+            sizeof(wchar_t)
+        );
+    }
 
-	if (!result)
-	{
-		DWORD err = GetLastError();
 
-		printf(
-			"CreateProcessW failed: %lu\n",
-			err
-		);
+    size_t cmdLen =
+        wcslen(exePath) +
+        wcslen(args) +
+        32;
 
-		return false;
-	}
 
-	WaitForSingleObject(
-		pi.hProcess,
-		INFINITE
-	);
+    wchar_t* cmd = (wchar_t*)calloc(
+        cmdLen,
+        sizeof(wchar_t)
+    );
 
-	DWORD exitCode = 0;
-	GetExitCodeProcess(
-		pi.hProcess,
-		&exitCode
-	);
 
-	CloseHandle(pi.hThread);
-	CloseHandle(pi.hProcess);
-	return exitCode == 0;
+    if (!cmd)
+    {
+        free(args);
+        return false;
+    }
+
+
+    swprintf_s(
+        cmd,
+        cmdLen,
+        L"\"%s\" %s",
+        exePath,
+        args
+    );
+
+
+    STARTUPINFOW si;
+    PROCESS_INFORMATION pi;
+
+    ZeroMemory(
+        &si,
+        sizeof(si)
+    );
+
+    ZeroMemory(
+        &pi,
+        sizeof(pi)
+    );
+
+    si.cb = sizeof(si);
+
+
+    DWORD flags = 0;
+
+    if (!showWindow)
+    {
+        flags |= CREATE_NO_WINDOW;
+    }
+
+
+    BOOL success = CreateProcessW(
+        NULL,
+        cmd,
+        NULL,
+        NULL,
+        FALSE,
+        flags,
+        NULL,
+        NULL,
+        &si,
+        &pi
+    );
+
+
+    free(args);
+    free(cmd);
+
+
+    if (!success)
+    {
+        return false;
+    }
+
+
+    WaitForSingleObject(
+        pi.hProcess,
+        INFINITE
+    );
+
+
+    DWORD exitCode = 1;
+
+
+    GetExitCodeProcess(
+        pi.hProcess,
+        &exitCode
+    );
+
+
+    CloseHandle(
+        pi.hThread
+    );
+
+    CloseHandle(
+        pi.hProcess
+    );
+
+
+    return exitCode == 0;
 }
 
 Utils utils =

@@ -1,4 +1,6 @@
 import { DataSourceManager_Injection, DataSourceManager_MYSQL_Initd, DataSourceManager_MYSQL_InitdServer, DataSourceManager_MYSQL_InitializeMysql, DataSourceManager_MYSQL_IsRun, DataSourceManager_MYSQL_Run, DataSourceManager_OpenNewTerminal, DataSourceManager_OpenWithExplorer } from '@/event/DataSourceManager';
+import { useNodesState, Position, useEdgesState, useReactFlow } from '@xyflow/react';
+import { updateCurrentState } from '@/store/features/currentSlice';
 import { BaseNodeHeaderTitle } from '@/components/base-node';
 import { LabeledHandle } from '@/components/labeled-handle';
 import { BaseHandle } from '@/components/base-handle';
@@ -8,10 +10,8 @@ import { Label } from '@/components/ui/label';
 import XyFlow from '@/components/XyFlow';
 import type { BaseNodePropChildrenDataType } from '@/components/XyFlow/RMBaseNode';
 import type { RootState } from '@/store/store';
-import { updateCurrentState } from '@/store/features/currentSlice';
 import { Edit, FileSliders, Folder, Info, Rocket } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNodesState, Position, useEdgesState, useReactFlow } from '@xyflow/react';
 import { useEffect, useState } from 'react';
 import sql from "@/assets/sql.png";
 import '@xyflow/react/dist/style.css';
@@ -81,7 +81,8 @@ const DataNode = {
                     })
                 }}>初始化</Button>
             </div>
-        }
+        },
+        type: "default"
     },
     type: "RMBaseNode"
 }
@@ -135,15 +136,10 @@ const RunNode = {
                 const username = formData.get("user") as string;
                 const password = formData.get("password") as string;
                 const action = formData.get("action") as string;
-                const mysqladminArgs = (() => {
-                    if (password) {
-                        return `-u"${username}" -p'${password}'`;
-                    }
-                    return `-u "${username}"`;
-                })();
 
+                const mysqladminArgs = `-u ${username} -p'${password}'`;
                 if (action === "stop_server") {
-                    onToggle("Stop", mysqladminArgs)
+                    onToggle("Stop", `${mysqladminArgs.replaceAll("'", '')} shutdown`)
                 } else if (action === "open_terminal") {
                     DataSourceManager_OpenNewTerminal(`${services.mysql.outDir}\\bin\\mysql.exe`, mysqladminArgs, (bool) => {
                         console.log(bool);
@@ -162,6 +158,7 @@ const RunNode = {
                     <form onSubmit={onSubmit}>
                         <div className='flex flex-col gap-y-1.5'>
                             <input
+                                alt=''
                                 required
                                 className='outline-none border-chart-1/25 border-2 pl-1'
                                 placeholder='用户名(默认root)'
@@ -173,8 +170,8 @@ const RunNode = {
                                 placeholder='密码(注意多余空格)'
                                 name="password"
                                 type='password' />
-                            <Button name="stop_server" type='submit' variant="destructive" disabled={disabled}>终止服务</Button>
                             <Button name="open_terminal" type='submit'>终端MYSQL</Button>
+                            <Button name="stop_server" type='submit' variant="destructive" disabled={disabled}>停止服务</Button>
                         </div>
                     </form>
                 </div>
@@ -199,7 +196,6 @@ export default function () {
                 ismysqlRun: bool
             }));
         })
-
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dispatch]);
 
@@ -357,7 +353,7 @@ default-character-set=utf8mb4`
                     const [data] = targetData;
                     return <>
                         <BaseHandle type="target" position={Position.Top} />
-                        <BaseHandle className={data} type="source" position={Position.Right} />
+                        {data.initd && <BaseHandle type="source" position={Position.Right} />}
                         <FileSliders className="size-5" />
                         <BaseNodeHeaderTitle>
                             配置管理
@@ -408,9 +404,9 @@ default-character-set=utf8mb4`
         },
         {
             id: "node_label_0",
-            position: { x: 220, y: 520 },
+            position: { x: 200, y: 520 },
             data: {
-                label: <div className='max-w-35 font_zhka'>
+                label: <div className='max-w-35 font_zhka border-r border-accent'>
                     <span className='text-primary'>重写配置</span>
                     <p>会删除Data目录（myql的所有数据）请备份好数据慎重重写配置</p>
                 </div>
@@ -430,14 +426,34 @@ default-character-set=utf8mb4`
         },
         {
             id: "node_label_2",
+            position: { x: -190, y: 750 },
+            data: {
+                label: <div className='max-w-110'>
+                    <span className='text-primary font_zhka'>忘记密码【解决方式】</span>
+                    <p><span className='font_zhka'>1.管理员运行命令窗口执行</span><span className='text-primary'>taskkill /IM mysqld.exe /F</span></p>
+                    <p className='py-1'><span className='mr-1'>2.</span>
+                        <Button size='sm' variant='outline' onClick={() => {
+                            DataSourceManager_OpenWithExplorer(services.mysql.outDir, (bool) => {
+                                console.log(bool);
+                            })
+                        }}>打开mysql目录</Button>
+                    </p>
+                    <p className='font_zhka'>3.删除目录下的data文件夹、my.ini文件</p>
+                    <p className='font_zhka text-chart-3'>4.重启程序</p>
+                </div>
+            },
+            type: "RMAnnotationNode"
+        },
+        {
+            id: "node_label_3",
             position: { x: -190, y: 610 },
             data: {
                 label: <ol className='flex flex-col gap-y-1max-w-80'>
-                    <li className='text-primary font-bold font_zhka'>运行</li>
-                    <li className='text-primary font-bold font_zhka'>完成服务启动第一件事！！！</li>
+                    <li className='text-primary font_zhka'>运行</li>
+                    <li className='text-primary font_zhka'>完成服务启动第一件事！！！</li>
                     <li className='font_zhka'>1.输入用户名、临时密码。点击终端mysql</li>
-                    <li><span className='font_zhka mr-2 select-text'>2.创建永久密码执行</span><span>ALTER USER 'root'@'localhost' IDENTIFIED BY '你需要设置的密码';</span></li>
-                    <li className='font_zhka text-chart-3'>3.本地mysql正常运行</li>
+                    <li><span className='font_zhka mr-2 select-text'>2.创建永久密码执行</span><span>ALTER USER root@localhost IDENTIFIED BY '你需要设置的密码';</span></li>
+                    <li className='font_zhka text-chart-3'>3.本地mysql正常【停止、运行】服务</li>
                 </ol>
             },
             type: "RMAnnotationNode"

@@ -19,6 +19,9 @@ export default function ({ nodes, edges, onEdgesChange, onNodesChange }: Props) 
             defaultEdgeOptions={defaultEdgeOptions}
             nodesDraggable={false}
             fitView
+            fitViewOptions={{
+                padding: 0.1
+            }}
         >
             <Background />
             <Controls
