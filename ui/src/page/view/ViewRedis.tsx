@@ -62,7 +62,7 @@ export default function () {
             data: {
                 header: <>
                     <img src={redis} className="w-6" />
-                    <BaseNodeHeaderTitle>Mysql</BaseNodeHeaderTitle>
+                    <BaseNodeHeaderTitle>Redis</BaseNodeHeaderTitle>
                 </>,
                 ContentComponent() {
                     const current = useSelector((state: RootState) => state.current)

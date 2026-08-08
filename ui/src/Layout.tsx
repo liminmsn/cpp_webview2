@@ -25,15 +25,15 @@ type SidebarMenuItemType = {
 }
 
 const projects: SidebarMenuItemType[] = [
-   {
-    name: "Redis",
-    icon: () => <img srcSet={redis} className="h-6 min-w-6" />,
-    page: PageRedis
-  },
   {
     name: "Mysql",
     icon: () => <img srcSet={sql} className="h-6 min-w-6" />,
     page: PageMysql
+  },
+  {
+    name: "Redis",
+    icon: () => <img srcSet={redis} className="h-6 min-w-6" />,
+    page: PageRedis
   }
 ]
 
