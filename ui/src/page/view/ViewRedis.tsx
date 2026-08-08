@@ -2,24 +2,34 @@ import { useNodesState, Position, useEdgesState } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { BaseNodeHeaderTitle } from '@/components/base-node';
 import redis from "@/assets/redis.png";
-import { Badge } from '@/components/ui/badge';
 import { LabeledHandle } from '@/components/labeled-handle';
 import { useDispatch, useSelector } from 'react-redux';
 import XyFlow from '@/components/XyFlow';
 import type { RootState } from '@/store/store';
 import { BaseHandle } from '@/components/base-handle';
 import { Textarea } from '@/components/ui/textarea';
+import { updateCurrentState } from '@/store/features/currentSlice';
 import type { BaseNodePropChildrenDataType } from '@/components/XyFlow/RMBaseNode';
 import { Edit, FileSliders, Info, Rocket } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { DataSourceManager_OpenWithExplorer, DataSourceManager_REDIS_GetConfigFile, DataSourceManager_REDIS_WriteConfigFile } from '@/event/DataSourceManager';
+import { DataSourceManager_OpenWithExplorer, DataSourceManager_REDIS_GetConfigFile, DataSourceManager_REDIS_IsRun, DataSourceManager_REDIS_RUN, DataSourceManager_REDIS_WriteConfigFile } from '@/event/DataSourceManager';
 import { toast } from 'sonner';
-import { updateCurrentState } from '@/store/features/currentSlice';
+import { Label } from '@/components/ui/label';
 
 export default function () {
-    // const dispatch = useDispatch();
+    const dispatch = useDispatch();
+    const current = useSelector((state: RootState) => state.current)
     const services = useSelector((state: RootState) => state.services)
+
+
+
+    useEffect(() => {
+        DataSourceManager_REDIS_IsRun(bol => {
+            dispatch(updateCurrentState({ ...current, isredisRun: bol }))
+        })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [current.isredisRun, dispatch])
 
     const [edges, , onEdgesChange] = useEdgesState([
         {
@@ -55,12 +65,11 @@ export default function () {
                     <BaseNodeHeaderTitle>Mysql</BaseNodeHeaderTitle>
                 </>,
                 ContentComponent() {
+                    const current = useSelector((state: RootState) => state.current)
                     return <div className='w-30 text-center'>
                         <span>服务状态</span>
-                        <div>
-                            <Badge variant="destructive">
-                                未运行
-                            </Badge>
+                        <div className={`p-2 rounded-sm inline-block mt-1 ${current.isredisRun ? "bg-chart-3" : "bg-chart-1"}`}>
+                            <Label>{current.isredisRun ? "运行中" : "未启动"}</Label>
                         </div>
                     </div>
                 },
@@ -99,7 +108,7 @@ export default function () {
 
                     useEffect(() => {
                         const onMessage = ({ data: d }: WebView2Event) => {
-                            if (d && d.data.type == "MysqlLog") {
+                            if (d && d.data.type == "RedisLog") {
                                 const msg = d.data.msg;
                                 const log = data.log += `${msg}\n`;
                                 setData({ ...data, log: log });
@@ -141,12 +150,16 @@ export default function () {
                 ContentComponent() {
                     const dispatch = useDispatch();
                     const current = useSelector((state: RootState) => state.current)
+
                     useEffect(() => {
                         DataSourceManager_REDIS_GetConfigFile(({ data }) => {
                             dispatch(updateCurrentState({ ...current, redisConfigLabel: data }))
                         })
+
                         // eslint-disable-next-line react-hooks/exhaustive-deps
-                    }, [dispatch])
+                    }, [current.redisConfigLabel, dispatch])
+
+
                     return <Textarea
                         className='nodrag nopan nowheel w-110 h-70'
                         placeholder="redis.conf配置"
@@ -170,7 +183,7 @@ export default function () {
                     <BaseHandle type="source" position={Position.Right} />
                     <FileSliders className="size-5" />
                     <BaseNodeHeaderTitle>
-                        配置管理
+                        配置
                     </BaseNodeHeaderTitle>
                 </>,
                 ContentComponent() {
@@ -201,18 +214,31 @@ export default function () {
                     </>
                 },
                 ContentComponent() {
+                    const current = useSelector((state: RootState) => state.current)
+                    useEffect(() => { }, [current.isredisRun])
+
+                    const [disabled, setDisabled] = useState(false);
                     return <div className='text-center'>
-                        <Button onClick={() => {
-                            DataSourceManager_OpenWithExplorer(services.redis.outDir + "\\redis.conf", (state) => {
-                                console.log(state);
-                            })
-                        }}>启动服务</Button>
+                        <Button
+                            disabled={disabled}
+                            variant={`${current.isredisRun ? "destructive" : "default"}`}
+                            onClick={() => {
+                                setDisabled(true)
+                                DataSourceManager_REDIS_RUN(current.isredisRun ? "STOP" : "RUN", () => {
+                                    setTimeout(() => {
+                                        setDisabled(false)
+                                        DataSourceManager_REDIS_IsRun(bol => {
+                                            dispatch(updateCurrentState({ ...current, isredisRun: bol }))
+                                        });
+                                    }, 1000);
+                                })
+                            }}
+                        >{current.isredisRun ? "停止" : "启动"}服务</Button>
                     </div>
                 },
             },
         }
     ]);
-
     return <XyFlow
         nodes={nodes}
         edges={edges}

@@ -73,16 +73,13 @@ void DataSourceManager::GetState() {
 
 bool DataSourceManager::OpenWithExplorer(const std::string& path)
 {
-	// 使用 ShellExecute 打开指定路径
 	HINSTANCE result = ShellExecuteA(
-		nullptr,        // 父窗口句柄
-		"open",         // 动作：open
-		"explorer.exe", // 程序：Explorer
-		path.c_str(),   // 参数：要打开的路径
-		nullptr,        // 默认目录
-		SW_SHOWNORMAL   // 显示方式
+		nullptr,
+		"open",
+		"explorer.exe",
+		path.c_str(),
+		nullptr,
+		SW_SHOWNORMAL
 	);
-
-	// ShellExecute 返回值大于 32 表示成功
-	return reinterpret_cast<int>(result) > 32;
+	return reinterpret_cast<INT_PTR>(result) > 32;
 }

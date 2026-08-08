@@ -356,7 +356,7 @@ default-character-set=utf8mb4`
                         {data.initd && <BaseHandle type="source" position={Position.Right} />}
                         <FileSliders className="size-5" />
                         <BaseNodeHeaderTitle>
-                            配置管理
+                            配置
                         </BaseNodeHeaderTitle>
                     </>
                 },
