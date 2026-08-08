@@ -151,7 +151,7 @@ const RunNode = {
                 // flow.fitView()
                 // setTimeout(() => {
                 // }, 1000);
-            }, [flow, current, disabled, dispatch]);
+            }, [flow, current.ismysqlRun, disabled, dispatch]);
 
             if (current.ismysqlRun) {
                 return < div className='nodrag nopan' >
@@ -449,8 +449,8 @@ default-character-set=utf8mb4`
             position: { x: -190, y: 610 },
             data: {
                 label: <ol className='flex flex-col gap-y-1max-w-80'>
-                    <li className='text-primary font_zhka'>运行</li>
-                    <li className='text-primary font_zhka'>完成服务启动第一件事！！！</li>
+                    <li className='text-primary font_zhka'>第一次运行</li>
+                    <li className='text-primary font_zhka'>服务启动第一件事！！！</li>
                     <li className='font_zhka'>1.输入用户名、临时密码。点击终端mysql</li>
                     <li><span className='font_zhka mr-2 select-text'>2.创建永久密码执行</span><span>ALTER USER root@localhost IDENTIFIED BY '你需要设置的密码';</span></li>
                     <li className='font_zhka text-chart-3'>3.本地mysql正常【停止、运行】服务</li>

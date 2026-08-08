@@ -2,14 +2,16 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
 type CurrentStateType = {
   ismysqlRun: boolean;
-  mysql: { log: string }
-  redis: { log: string }
+  redisConfigLabel: string;
+  mysql: any
+  redis: any
 }
 
 const initialState: CurrentStateType = {
   ismysqlRun: false,
-  mysql: { log: "" },
-  redis: { log: "" }
+  mysql: {},
+  redis: {},
+  redisConfigLabel: ""
 }
 
 const currentSlice = createSlice({

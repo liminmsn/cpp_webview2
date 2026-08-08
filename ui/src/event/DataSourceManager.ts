@@ -148,3 +148,34 @@ export function DataSourceManager_MYSQL_IsRun(call: (bool: any) => void) {
         }
     }, call)
 }
+
+export function DataSourceManager_REDIS_GetConfigFile(call: (blob: any) => void) {
+    GlobalWebViewEbent.send({
+        id: crypto.randomUUID(),
+        data: {
+            type: "DataSourceManager",
+            data: {
+                type: "REDIS",
+                data: {
+                    key: "GetConfigFile"
+                }
+            }
+        }
+    }, call)
+}
+
+export function DataSourceManager_REDIS_WriteConfigFile(content: string, call: (blob: any) => void) {
+    GlobalWebViewEbent.send({
+        id: crypto.randomUUID(),
+        data: {
+            type: "DataSourceManager",
+            data: {
+                type: "REDIS",
+                data: {
+                    key: "WriteConfigFile",
+                    content
+                }
+            }
+        }
+    }, call)
+}

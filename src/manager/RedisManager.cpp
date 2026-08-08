@@ -2,6 +2,7 @@
 #include "../utils/Encoding.h"
 #include "../utils/Path.h"
 #include "../utils/Zip.h"
+#include "../utils/File.h"
 #include "../head/AppLication.h"
 #include <thread>
 
@@ -14,10 +15,7 @@ RedisManager::RedisManager(AppLication& app) :m_app(app) {
 
 	zipPath = redisZip.string();
 	outDir = (fs::path(basePath) / "redis").string();
-
-	if (directoryExistsAndNotEmpty(outDir)) {
-		outDir += "\\Redis-8.8.1-Windows-x64-cygwin";
-	}
+	baseDir += outDir + "\\Redis-8.8.1-Windows-x64-cygwin";
 }
 
 void RedisManager::Init() {
@@ -39,4 +37,35 @@ void RedisManager::Init() {
 }
 
 void RedisManager::OnMessage(json& data) {
+	if (data["key"] == "GetConfigFile") {
+		std::string content;
+		if (ReadFile(baseDir + "\\redis.conf", content)) {
+			m_app.bridge->SendId(
+				{
+					{"code",0},
+					{"data",content}
+				}
+			);
+		}
+		else {
+			m_app.bridge->SendId(
+				{
+					{"code",1},
+					{"data",nullptr}
+				}
+			);
+		}
+	}
+	else if (data["key"] == "WriteConfigFile") {
+		json res;
+		res["state"] = false;
+		if (WriteFile(baseDir + "\\redis.conf", data["content"]))
+		{
+			res["state"] = true;
+		}
+		m_app.bridge->SendId(res);
+	}
+	else if (data["key"] == "Run") {
+
+	}
 }
