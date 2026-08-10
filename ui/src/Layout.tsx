@@ -17,6 +17,7 @@ import sql from "@/assets/sql.png";
 import redis from "@/assets/redis.png";
 import { Toaster } from "./components/ui/sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog";
+import Md from "./components/md";
 
 type SidebarMenuItemType = {
   name: string;
@@ -87,13 +88,15 @@ export default function () {
                 } />
               <DialogContent showCloseButton={false}>
                 <DialogHeader>
-                  <DialogTitle>关于本程序开发灵感</DialogTitle>
+                  <DialogTitle>关于本程序</DialogTitle>
                   <DialogDescription>
-                    This dialog has a sticky footer that stays visible while the content
-                    scrolls.
+                    LocalData Manager 是一款面向开发者的本地数据库管理工具，旨在简化 MySQL 与 Redis 环境部署、配置、启动与管理流程。
                   </DialogDescription>
                 </DialogHeader>
-                <div className="-mx-4 no-scrollbar max-h-[50vh] overflow-y-auto px-4">
+                <div className="max-h-70 overflow-y-auto">
+                  <Md />
+                </div>
+                {/* <div className="-mx-4 no-scrollbar max-h-[50vh] overflow-y-auto px-4">
                   {Array.from({ length: 10 }).map((_, index) => (
                     <p key={index} className="mb-4 leading-normal">
                       Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
@@ -105,7 +108,7 @@ export default function () {
                       sunt in culpa qui officia deserunt mollit anim id est laborum.
                     </p>
                   ))}
-                </div>
+                </div> */}
                 {/* <DialogFooter>
                   <DialogClose render={<Button variant="outline">Close</Button>} />
                 </DialogFooter> */}

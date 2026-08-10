@@ -10,5 +10,9 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src")
     }
+  },
+  build: {
+    outDir: "../resources/web",
+    emptyOutDir: true
   }
 })
