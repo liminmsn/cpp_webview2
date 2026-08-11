@@ -11,3 +11,4 @@ resources/zip/Redis-8.8.1-Windows-x64-cygwin.zip
 /resources/web
 /MysqlRedis.msix
 /MSIX/LocalDataManager
+/script/MysqlRedis.msix

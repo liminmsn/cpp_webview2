@@ -1,3 +1,3 @@
 makeappx pack `
     /d "..\MSIX" `
-    /p "..\MysqlRedis.msix"
+    /p ".\MysqlRedis.msix"

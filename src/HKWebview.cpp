@@ -63,10 +63,13 @@ HKWebview::HKWebview(AppLication& app) : m_app(app)
 #ifdef WEBVIEW_DEBUG
 								webview->Navigate(L" http://127.0.0.1:5173");
 #else
-								auto folderPath =
-									std::filesystem::current_path()
-									/ L"resources"
-									/ L"web";
+								//auto folderPath =
+								//	std::filesystem::current_path()
+								//	/ L"resources"
+								//	/ L"web";
+								wchar_t exePath[MAX_PATH];
+								GetModuleFileNameW(nullptr, exePath, MAX_PATH);
+								std::filesystem::path folderPath = std::filesystem::path(exePath).parent_path() / L"resources" / L"web";
 
 								std::wstring folder = folderPath.wstring();
 
