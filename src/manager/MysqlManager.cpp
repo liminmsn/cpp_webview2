@@ -9,21 +9,27 @@
 #include <utils.h>
 #include <thread>
 
+
+
+//默认初始化
 MysqlManager::MysqlManager(AppLication& app) :m_app(app)
 {
 	std::wstring wBasePath = GetInstallPath() + L"\\resources";
 	std::string basePath = WStringToUtf8(wBasePath);
 
 	fs::path zipDir = fs::path(basePath) / "zip";
-	fs::path mysqlZip = zipDir / "mysql-8.4.10-winx64.zip";
+	zipPath = (zipDir / "mysql-8.4.10-winx64.zip").string();
 
-	zipPath = mysqlZip.string();
-
+#ifdef WEBVIEW_DEBUG
 	outDir = (fs::path(basePath) / "mysql").string();
-
+#else
+	//std::wstring localAppData = GetLocalAppDataPath();
+	//outDir = WStringToUtf8(localAppData + L"\\LocalRM\\mysql");
+	std::wstring localState = GetSandboxLocalStatePath();
+	outDir = WStringToUtf8(localState + L"\\LocalRM\\mysql");
+#endif
 	baseDir = outDir + "\\mysql-8.4.10-winx64";
-	//if (directoryExistsAndNotEmpty(outDir)) {
-	//}
+
 }
 
 bool MysqlManager::IsMySQLRunning(int port = 3306, std::string* outInfo = nullptr, int connectTimeoutMs = 500)
@@ -196,31 +202,41 @@ void MysqlManager::Send(std::string msg) {
 	m_app.bridge->SendId(res);
 }
 
-bool MysqlManager::InitializeMysql() {
+bool MysqlManager::InitializeMysql()
+{
 	if (IsMysqldProcessRunning())
 	{
 		Send("检测到 mysqld.exe 正在运行，禁止初始化！");
 		return false;
 	}
 
-	std::string mysqld = baseDir + "\\bin\\mysqld.exe";
+	std::string binDir = baseDir + "\\bin";
+	std::string mysqld =
+		binDir + "\\mysqld.exe";
+
+	SetDllDirectoryA(binDir.c_str());
 	std::string cmd =
 		"\"" + mysqld +
 		"\" --defaults-file=\"" +
 		baseDir +
 		"\\my.ini\" --initialize --console";
-
 	bool success = true;
 
-	RunCommandWithOutput(cmd,
-		[&](const std::string& output) {
+	RunCommandWithOutput(
+		cmd,
+		[&](const std::string& output)
+		{
 			Send(output);
-			// 根据输出判断是否有错误
+
 			if (output.find("error") != std::string::npos ||
-				output.find("failed") != std::string::npos) {
+				output.find("failed") != std::string::npos)
+			{
 				success = false;
 			}
-		});
+		},
+		baseDir + "\\bin"
+	);
+
 
 	return success;
 }
@@ -258,31 +274,6 @@ bool MysqlManager::IsMysqldProcessRunning()
 	return found;
 }
 
-//bool MysqlManager::StopMysqldUsingMysqladmin(const std::string& binDir, const std::string& mysqladminArgs = "-u root", int port = 3306, int waitMs = 5000)
-//{
-//	std::string exe = binDir;
-//	if (!exe.empty() && (exe.back() != '\\' && exe.back() != '/')) exe += "\\";
-//	exe += "mysqladmin.exe";
-//	std::string cmd = "\"" + exe + "\" " + mysqladminArgs + " shutdown";
-//
-//	std::string output;
-//	RunCommandWithOutput(cmd,
-//		[&](const std::string& s) {
-//			Send(output += s);
-//		});
-//	const int stepMs = 200;
-//	int waited = 0;
-//	while (waited < waitMs) {
-//		ServerCheckPortUsage usage = CheckPortUsage(port);
-//		if (usage.Props.empty()) {
-//			return true;
-//		}
-//		Sleep(stepMs);
-//		waited += stepMs;
-//	}
-//	return false;
-//}
-
 void MysqlManager::OnMessage(json& data) {
 	std::string workDir = baseDir + "\\bin";
 	std::string mysqld = baseDir + "\\bin\\mysqld.exe";
@@ -299,7 +290,7 @@ void MysqlManager::OnMessage(json& data) {
 		m_app.bridge->SendId(IsMySQLRunning());
 	else if (data["key"] == "CreateConfig")
 	{
-		std::string& ConfigLabel = data["val"].get<std::string>();
+		std::string ConfigLabel = data["val"].get<std::string>();
 		std::string dataDir = baseDir + "\\data";
 		if (WriteFile(baseDir + "\\my.ini", ConfigLabel) && RemoveDirectory(dataDir))
 		{

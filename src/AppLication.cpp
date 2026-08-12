@@ -88,6 +88,7 @@ AppLication::AppLication(WNDCLASSW& wc, HINSTANCE hInst, int nCmdShow) : m_wc(wc
 		MessageBoxW(nullptr, L"注册窗口类失败", L"错误", MB_ICONERROR);
 		return;
 	}
+
 	UINT dpi = GetDpiForSystem();
 	int width = ScaleByDpi(DESIGN_WIDTH, dpi);
 	int height = ScaleByDpi(DESIGN_HEIGHT, dpi);

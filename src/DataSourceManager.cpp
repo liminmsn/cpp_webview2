@@ -37,7 +37,7 @@ void DataSourceManager::OnMessage(json& pos) {
 	else if (pos["data"]["type"] == "REDIS")
 			m_sourcesMap["REDIS"]->OnMessage(pos["data"]["data"]);
 	else if (pos["data"]["type"] == "FileExists") {
-		std::string& path = pos["data"]["path"].get<std::string>();
+		std::string path = pos["data"]["path"].get<std::string>();
 		m_app.bridge->SendId(FileExists(path));
 	}
 }

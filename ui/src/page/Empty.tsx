@@ -30,7 +30,7 @@ export default function ({ InitKey }: { InitKey: "InitMysql" | "InitRedis" }) {
     }, [dispatch]);
 
     return <div className="h-full flex flex-col items-center justify-center">
-        <div className="text-xs text-accent mb-1 max-w-5/10">{msg}</div>
+        <div className="text-xs text-accent mb-1 max-w-5/10 overflow-hidden text-ellipsis">{msg}</div>
         <Button disabled={disabled} onClick={() => {
             DataSourceManager_Init(InitKey)
             setDisabled(true)

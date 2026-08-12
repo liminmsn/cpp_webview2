@@ -1,8 +1,11 @@
 #pragma once
+#include <shlobj.h>
 #include <iostream>
 #include <filesystem>
 #include <appmodel.h>
 #pragma comment(lib, "runtimeobject.lib")
+
+#include <winrt/Windows.Storage.h>
 
 
 inline std::wstring GetExeDir()
@@ -50,4 +53,24 @@ inline bool directoryExistsAndNotEmpty(const std::string& path) {
     fs::path dir(path);
     if (!fs::exists(dir) || !fs::is_directory(dir)) return false;
     return fs::directory_iterator(dir) != fs::directory_iterator();
+}
+
+
+inline std::wstring GetLocalAppDataPath() {
+    PWSTR path = nullptr;
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &path))) {
+        std::wstring result(path);
+        CoTaskMemFree(path);
+        return result;
+    }
+    return L"";
+}
+
+inline std::wstring GetSandboxLocalStatePath()
+{
+    auto folder =
+        winrt::Windows::Storage::ApplicationData::Current()
+        .LocalFolder();
+
+    return folder.Path().c_str();
 }

@@ -6,6 +6,8 @@
 #include "Window.h"
 #include "DataSourceManager.h"
 
+#include <winrt/Windows.Storage.h>
+
 class AppLication
 {
 public:

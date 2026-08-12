@@ -93,53 +93,107 @@ inline bool KillPort(int port)
 	return true;
 }
 
-inline void RunCommandWithOutput(const std::string& cmd, std::function<void(const std::string&)> onOutput)
+inline void RunCommandWithOutput(
+	const std::string& cmd,
+	std::function<void(const std::string&)> onOutput,
+	const std::string& workDir = ""
+)
 {
 	SECURITY_ATTRIBUTES sa{};
 	sa.nLength = sizeof(sa);
 	sa.bInheritHandle = TRUE;
+
 	HANDLE hReadPipe = nullptr;
 	HANDLE hWritePipe = nullptr;
+
+
 	if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0))
 	{
 		onOutput("CreatePipe failed error=" + std::to_string(GetLastError()));
 		return;
 	}
-	SetHandleInformation(hReadPipe, HANDLE_FLAG_INHERIT, 0);
+
+	SetHandleInformation(
+		hReadPipe,
+		HANDLE_FLAG_INHERIT,
+		0
+	);
 
 	STARTUPINFOA si{};
 	si.cb = sizeof(si);
 	si.dwFlags |= STARTF_USESTDHANDLES;
+
 	si.hStdOutput = hWritePipe;
 	si.hStdError = hWritePipe;
 	si.hStdInput = NULL;
 
 	PROCESS_INFORMATION pi{};
 	std::string command = cmd;
-	BOOL ret = CreateProcessA(nullptr, command.data(), nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
+	BOOL ret = CreateProcessA(
+		nullptr,
+		command.data(),
+		nullptr,
+		nullptr,
+		TRUE,
+		CREATE_NO_WINDOW,
+		nullptr,
+
+		// 关键修改
+		workDir.empty() ? nullptr : workDir.c_str(),
+
+		&si,
+		&pi
+	);
+
+
 	CloseHandle(hWritePipe);
+
 
 	if (!ret)
 	{
-		onOutput("CreateProcess failed error=" + std::to_string(GetLastError()));
+		onOutput(
+			"CreateProcess failed error="
+			+ std::to_string(GetLastError())
+		);
+
 		CloseHandle(hReadPipe);
 		return;
 	}
 
-	char buffer[4096] = {};
+
+	char buffer[4096]{};
 	DWORD read = 0;
-	while (ReadFile(hReadPipe, buffer, sizeof(buffer) - 1, &read, nullptr))
+
+
+	while (ReadFile(
+		hReadPipe,
+		buffer,
+		sizeof(buffer) - 1,
+		&read,
+		nullptr))
 	{
 		if (read == 0)
 			break;
+
 		buffer[read] = 0;
+
 		onOutput(buffer);
 	}
-	WaitForSingleObject(pi.hProcess, INFINITE);
-
+	WaitForSingleObject(
+		pi.hProcess,
+		INFINITE
+	);
 	DWORD exitCode = 0;
-	GetExitCodeProcess(pi.hProcess, &exitCode);
-	onOutput("[exit code=" + std::to_string(exitCode) + "]");
+	GetExitCodeProcess(
+		pi.hProcess,
+		&exitCode
+	);
+
+	onOutput(
+		"[exit code="
+		+ std::to_string(exitCode)
+		+ "]"
+	);
 
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);

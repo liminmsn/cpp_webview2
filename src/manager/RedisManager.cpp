@@ -13,10 +13,18 @@ RedisManager::RedisManager(AppLication& app) :m_app(app) {
 	std::string basePath = WStringToUtf8(wBasePath);
 
 	fs::path zipDir = fs::path(basePath) / "zip";
-	fs::path redisZip = zipDir / "Redis-8.8.1-Windows-x64-cygwin.zip";
+	zipPath = (zipDir / "Redis-8.8.1-Windows-x64-cygwin.zip").string();
 
-	zipPath = redisZip.string();
+#ifdef WEBVIEW_DEBUG
 	outDir = (fs::path(basePath) / "redis").string();
+#else
+	//std::wstring localAppData = GetLocalAppDataPath();
+	//outDir = WStringToUtf8(localAppData + L"\\LocalRM\\redis");
+	std::wstring localState = GetSandboxLocalStatePath();
+	outDir = WStringToUtf8(localState + L"\\LocalRM\\redis");
+#endif
+
+
 	baseDir += outDir + "\\Redis-8.8.1-Windows-x64-cygwin";
 }
 

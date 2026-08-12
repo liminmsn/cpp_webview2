@@ -1,8 +1,8 @@
 #define UNICODE
 #define _UNICODE
 #include <objbase.h>
-#include "src/head/AppLication.h"
 #include "resource.h"
+#include "src/head/AppLication.h"
 
 #include <shellscalingapi.h>
 #pragma comment(lib, "Shcore.lib")
@@ -29,5 +29,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
     app.reset();
     CoUninitialize();
+#ifdef WEBVIEW_RELEASE
+    winrt::init_apartment();
+#endif
     return exitCode;
 }
