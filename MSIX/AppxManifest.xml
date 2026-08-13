@@ -9,7 +9,7 @@
 	<Identity
     Name="4CB2B2AD.MysqlRedis"
     Publisher="CN=751A5618-6306-4BA3-ACC8-A7A9BD0A0D7A"
-    Version="1.1.0.1" />
+    Version="1.2.0.0" />
 	<Properties>
 		<DisplayName>本地MysqlRedis</DisplayName>
 		<PublisherDisplayName>杨再涛</PublisherDisplayName>
